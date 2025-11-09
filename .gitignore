@@ -1,0 +1,8 @@
+# Bỏ qua thư mục chứa các thư viện đã cài đặt
+node_modules
+
+# Bỏ qua file chứa các biến môi trường và mật khẩu
+.env
+
+# Bỏ qua file database cũ của SQLite
+troll_tool.db

@@ -1,0 +1,145 @@
+/* === TRANG LOGIN === */
+.full-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-y: auto; position: relative; padding: 20px 0; }
+#matrix-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+.digital-frame-corner { position: fixed; width: 40px; height: 40px; border-color: rgba(217, 4, 41, 0.5); border-style: solid; z-index: 2; animation: pulse-frame 3s infinite ease-in-out; }
+.corner-tl { top: 20px; left: 20px; border-width: 4px 0 0 4px; } .corner-tr { top: 20px; right: 20px; border-width: 4px 4px 0 0; } .corner-bl { bottom: 20px; left: 20px; border-width: 0 0 4px 4px; } .corner-br { bottom: 20px; right: 20px; border-width: 0 4px 4px 0; }
+@keyframes pulse-frame { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+.login-container { 
+    display: flex; 
+    width: 920px;
+    background-color: #fff; 
+    border-radius: 20px; 
+    position: relative; 
+    overflow: hidden; 
+    z-index: 3; 
+    border: 1px solid var(--border-color); 
+    box-shadow: 0 0 25px rgba(217, 4, 41, 0.25); 
+    animation: glowing-border 4s infinite ease-in-out; 
+}
+
+@keyframes glowing-border { 0% { box-shadow: 0 0 15px rgba(217, 4, 41, 0.2); } 50% { box-shadow: 0 0 30px rgba(217, 4, 41, 0.5); } 100% { box-shadow: 0 0 15px rgba(217, 4, 41, 0.2); } }
+.login-promo-panel, .login-form-panel { position: relative; z-index: 5; }
+
+/* --- ĐÃ SỬA: TỶ LỆ 40%, NỀN SÁNG VÀ HIỆU ỨNG MỚI --- */
+.login-promo-panel {
+    width: 40%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+    background: #f8f9fa;
+    position: relative;
+    border-right: 1px solid #eee;
+}
+
+/* Hiệu ứng 4 Góc Năng Lượng */
+.login-promo-panel::before, .login-promo-panel::after,
+.login-promo-panel img::before, .login-promo-panel img::after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-color: var(--primary-red);
+    border-style: solid;
+    animation: pulse-corners 3s infinite ease-in-out;
+}
+.login-promo-panel::before { top: 30px; left: 30px; border-width: 3px 0 0 3px; }
+.login-promo-panel::after { bottom: 30px; right: 30px; border-width: 0 3px 3px 0; }
+.login-promo-panel img::before { top: 30px; right: 30px; border-width: 3px 3px 0 0; }
+.login-promo-panel img::after { bottom: 30px; left: 30px; border-width: 0 0 3px 3px; }
+
+@keyframes pulse-corners {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; filter: drop-shadow(0 0 8px var(--primary-red)); }
+}
+
+/* --- ĐÃ SỬA: LÀM ẢNH LỚN HƠN VÀ THÊM HIỆU ỨNG TỎA SÁNG --- */
+.login-promo-panel img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    position: relative; /* Cần thiết để pseudo-elements hoạt động */
+    z-index: 1;
+    border-radius: 12px;
+    /* Hiệu ứng tỏa sáng */
+    animation: energy-glow 4s infinite ease-in-out;
+}
+
+@keyframes energy-glow {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(217, 4, 41, 0.3)); }
+    50% { filter: drop-shadow(0 0 25px rgba(217, 4, 41, 0.6)); }
+}
+
+/* --- ĐÃ SỬA: TỶ LỆ 60% --- */
+.login-form-panel { 
+    width: 60%;
+    padding: 50px;
+    box-sizing: border-box; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+}
+
+.login-form-panel h2 { color: var(--primary-red); margin-bottom: 25px; text-align: center; }
+.slogan-text { text-align: center; color: var(--text-light); font-size: 0.9em; margin-top: -15px; margin-bottom: 25px; }
+.form-group { margin-bottom: 20px; }
+input { width: 100%; padding: 14px; border: 1px solid var(--border-color); background-color: #f8f9fa; color: var(--text-color); border-radius: 10px; box-sizing: border-box; font-size: 1em; transition: all 0.3s ease; }
+input:focus { outline: none; border-color: var(--primary-red); box-shadow: 0 0 15px 3px rgba(217, 4, 41, 0.4); transform: scale(1.02); }
+.btn-secondary { width: 100%; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1em; background-color: #e9ecef; color: var(--text-color); border: none; transition: all 0.3s; }
+.btn-secondary:hover { background-color: #dae0e5; transform: translateY(-2px); }
+#message { text-align: center; margin-top: 20px; font-weight: bold; height: 20px; }
+.success { color: #28a745; }
+.error { color: var(--primary-red); }
+
+/*
+=========================================
+=== TỐI ƯU CHO ĐIỆN THOẠI (RESPONSIVE) ===
+=========================================
+*/
+@media (max-width: 900px) {
+    .full-page { padding: 0; align-items: flex-start; }
+    .digital-frame-corner { display: none; }
+
+    .login-container {
+        flex-direction: column;
+        width: 100%;
+        min-height: 100vh;
+        height: auto;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        background-color: transparent;
+    }
+
+    .login-promo-panel,
+    .login-form-panel {
+        width: 100%;
+        height: auto;
+    }
+    
+    .login-promo-panel {
+        background: transparent;
+        padding: 50px 20px 30px;
+    }
+    .login-promo-panel img {
+        background-color: #fff;
+        padding: 10px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        max-height: 100%;
+        animation: none; /* Tắt hiệu ứng tỏa sáng trên mobile cho gọn */
+    }
+    /* Ẩn hiệu ứng góc trên mobile */
+    .login-promo-panel::before, .login-promo-panel::after,
+    .login-promo-panel img::before, .login-promo-panel img::after {
+        display: none;
+    }
+
+    .login-form-panel {
+        background-color: #fff;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        padding: 30px 25px 40px;
+    }
+}

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <head>
+    <meta charset="UTF-8">
+    <title>Quản Lý User</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+    <style>
+        .card { padding: 25px; }
+        .user-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--border-color); }
+        .user-item:last-child { border-bottom: none; }
+        .coin-controls { display: flex; align-items: center; gap: 10px; }
+        .coin-controls input { width: 80px; }
+        .coin-controls button { width: auto; font-size: 0.9em; text-transform: none; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .search-bar { width: 50%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .btn-danger { background: #dc3545; color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+        .btn-danger:hover { background: #c82333; }
+        #modal-message { margin-top: 15px; font-weight: bold; text-align: center; height: 20px; }
+    </style>
+</head>
+<body class="admin-page">
+    <header class="header fadeIn">
+        <a href="/admin.html" class="back-button">&larr; Quay lại Menu</a>
+        <button class="logout-button">
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span>Đăng Xuất</span>
+        </button>
+    </header>
+
+    <main class="fadeIn" style="animation-delay: 0.2s;">
+        <h2 style="margin-top:0;">Quản Lý Người Dùng</h2>
+        
+        <div class="page-header">
+            <input type="text" id="user-search-input" class="search-bar" placeholder="Tìm kiếm user trong danh sách của bạn...">
+            <button class="btn-primary" style="width: auto; padding: 12px 20px;" onclick="openLinkUserModal()">+ Thêm Tài Khoản</button>
+        </div>
+
+        <div id="user-list-container" class="card"></div>
+        <p id="message"></p>
+    </main>
+    
+    <div id="linkUserModal" class="modal">
+        <div class="modal-content fadeIn">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>Thêm Tài Khoản Mới</h2>
+            <p style="color: var(--text-light); text-align: center;">Nhập chính xác tên tài khoản cần thêm vào danh sách quản lý.</p>
+            
+            <form id="link-user-form">
+                <div class="form-group" style="margin-top: 20px;">
+                    <input type="text" id="add-username-input" placeholder="Tên tài khoản" required>
+                </div>
+                <button type="submit" class="btn-primary">Thêm Tài Khoản</button>
+            </form>
+            <p id="modal-message"></p>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelector('.logout-button').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = '/';
+        });
+
+        const userListContainer = document.getElementById('user-list-container');
+        const messageEl = document.getElementById('message');
+        const modalMessageEl = document.getElementById('modal-message');
+        const linkUserModal = document.getElementById('linkUserModal');
+        const userSearchInput = document.getElementById('user-search-input');
+        const linkUserForm = document.getElementById('link-user-form');
+        let currentUsers = [];
+
+        function showMessage(msg, isSuccess) {
+            messageEl.textContent = msg;
+            messageEl.className = isSuccess ? 'success' : 'error';
+            setTimeout(() => { messageEl.textContent = ''; }, 3000);
+        }
+        function showModalMessage(msg, isSuccess) {
+            modalMessageEl.textContent = msg;
+            modalMessageEl.className = isSuccess ? 'success' : 'error';
+        }
+        function openLinkUserModal() {
+            linkUserModal.style.display = 'flex';
+        }
+        function closeModal() {
+            linkUserModal.style.display = 'none';
+            linkUserForm.reset();
+            showModalMessage('', true);
+        }
+
+        async function fetchAndDisplayUsers() {
+            const adminId = localStorage.getItem('adminId');
+            if (!adminId) {
+                alert("Lỗi xác thực Admin. Vui lòng đăng nhập lại.");
+                window.location.href = '/';
+                return;
+            }
+            const response = await fetch(`/api/users?admin_id=${adminId}`);
+            const data = await response.json();
+            if (data.success) {
+                currentUsers = data.users;
+                renderUsers(currentUsers);
+            } else {
+                currentUsers = [];
+                renderUsers([]);
+            }
+        }
+        
+        function renderUsers(users) {
+            userListContainer.innerHTML = '';
+             if (users.length === 0) {
+                userListContainer.innerHTML = '<p style="text-align:center; color: var(--text-light);">Không có người dùng nào trong danh sách.</p>';
+                return;
+            }
+            users.forEach(user => {
+                const item = document.createElement('div');
+                item.className = 'user-item';
+                item.innerHTML = `
+                    <span>${user.username} (Token: ${user.coins})</span>
+                    <div class="coin-controls">
+                        <input type="number" min="0" value="${user.coins}" id="coins-for-${user.id}">
+                        <button class="btn-primary" onclick="updateCoins(${user.id})">Cập nhật</button>
+                        <button class="btn-danger" onclick="deleteUser(${user.id}, '${user.username}')">Xóa</button>
+                    </div>
+                `;
+                userListContainer.appendChild(item);
+            });
+        }
+        
+        userSearchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredUsers = currentUsers.filter(user => user.username.toLowerCase().includes(searchTerm));
+            renderUsers(filteredUsers);
+        });
+
+        linkUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showModalMessage('Đang xử lý...', true);
+            const username = document.getElementById('add-username-input').value;
+            const adminId = localStorage.getItem('adminId');
+            
+            const response = await fetch('/api/link-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminId, username })
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                showModalMessage(result.message, true);
+                setTimeout(() => {
+                    closeModal();
+                    fetchAndDisplayUsers();
+                }, 1500);
+            } else {
+                showModalMessage(result.message, false);
+            }
+        });
+
+        async function updateCoins(userId) {
+            const coinInput = document.getElementById(`coins-for-${userId}`);
+            const response = await fetch('/api/update-coins', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userId, coins: coinInput.value })
+            });
+            const result = await response.json();
+            showMessage(result.message, result.success);
+            if (result.success) {
+                fetchAndDisplayUsers();
+            }
+        }
+        async function deleteUser(userId, username) {
+            if (confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${username}" không? Hành động này không thể hoàn tác.`)) {
+                const adminId = localStorage.getItem('adminId');
+                const response = await fetch('/api/delete-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, adminId })
+                });
+                const result = await response.json();
+                showMessage(result.message, result.success);
+                if (result.success) {
+                    fetchAndDisplayUsers();
+                }
+            }
+        }
+
+        window.onload = fetchAndDisplayUsers;
+        window.onclick = (event) => {
+            if (event.target == linkUserModal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

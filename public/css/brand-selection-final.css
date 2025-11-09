@@ -1,0 +1,137 @@
+/* Giao diện cuối cùng: Carousel 3D */
+
+body {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ======================================= */
+/* === CONTAINER & HIỆU ỨNG 3D         === */
+/* ======================================= */
+.carousel-main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    z-index: 5;
+    padding: 20px 0;
+}
+
+/* Container chính, tạo không gian 3D */
+.carousel-container {
+    width: 100%;
+    /* THAY ĐỔI: Tăng chiều cao container để chứa vừa thẻ lớn hơn */
+    height: 520px; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1200px; /* Quan trọng: Tạo chiều sâu */
+}
+
+/* Slider chứa các thẻ, bật chế độ 3D */
+.brand-slider {
+    position: relative;
+    /* THAY ĐỔI: Tăng kích thước của thẻ active */
+    width: 320px;
+    height: 480px;
+    transform-style: preserve-3d;
+}
+
+/* ======================================= */
+/* === THIẾT KẾ THẺ BÀI (Giữ nguyên)    === */
+/* ======================================= */
+
+/* Sửa lại: Các thẻ sẽ xếp chồng lên nhau bằng position: absolute */
+.brand-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 20px;
+    overflow: hidden;
+    /* Hiệu ứng chuyển động mượt mà */
+    transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.brand-card::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent 0%, transparent 80%, var(--primary-red) 95%, var(--primary-red) 100%);
+    animation: led-border-spin 2s linear infinite;
+    transform-origin: 0 0; /* Sửa lại tâm xoay */
+}
+
+@keyframes led-border-spin {
+    100% { transform: rotate(360deg); }
+}
+
+.brand-card-inner {
+    position: absolute;
+    inset: 3px; 
+    border-radius: 18px;
+    background: rgba(15, 5, 5, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 25px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.logo-background { width: 150px; height: 150px; background-color: #fff; border-radius: 15px; display: flex; justify-content: center; align-items: center; padding: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+.brand-logo { max-width: 100%; max-height: 100%; object-fit: contain; }
+.brand-name { font-size: 1.5em; font-weight: 700; font-family: 'Poppins', sans-serif; color: var(--primary-red); text-shadow: 0 0 15px var(--primary-red); }
+
+/* ======================================= */
+/* === VỊ TRÍ CÁC THẺ TRONG CAROUSEL    === */
+/* ======================================= */
+
+/* Thẻ ở giữa (active) */
+.brand-card.active {
+    transform: translateX(0) translateZ(0) scale(1);
+    opacity: 1;
+    z-index: 100;
+}
+
+/* Thẻ bên trái (prev) */
+.brand-card.prev {
+    /* THAY ĐỔI: Tăng khoảng cách đẩy sang trái */
+    transform: translateX(-75%) translateZ(-200px) scale(0.8);
+    opacity: 0.6;
+    z-index: 90;
+}
+
+/* Thẻ bên phải (next) */
+.brand-card.next {
+    /* THAY ĐỔI: Tăng khoảng cách đẩy sang phải */
+    transform: translateX(75%) translateZ(-200px) scale(0.8);
+    opacity: 0.6;
+    z-index: 90;
+}
+
+/* Các thẻ còn lại sẽ ẩn đi */
+.brand-card:not(.active):not(.prev):not(.next) {
+    transform: scale(0.5);
+    opacity: 0;
+    pointer-events: none; /* Không cho phép click */
+}
+
+/* ======================================= */
+/* === NÚT ĐIỀU KHIỂN                  ==== */
+/* ======================================= */
+.carousel-controls { display: flex; justify-content: space-between; width: 100%; max-width: 800px; margin-top: 20px; }
+.control-btn { background: transparent; border: none; color: #fff; font-size: 1.2em; font-family: 'Poppins', sans-serif; font-weight: 700; cursor: pointer; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); transition: all 0.2s ease; padding: 10px 20px; display: flex; align-items: center; gap: 10px; }
+.control-btn:hover { color: var(--primary-red); text-shadow: 0 0 15px var(--primary-red); transform: scale(1.1); }
+.control-btn .arrow { font-size: 1.5em; }

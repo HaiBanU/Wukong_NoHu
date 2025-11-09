@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Phân Tích Game</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/user.css"> 
+    <link rel="stylesheet" href="/css/analysis.css">
+</head>
+<body>
+    <video autoplay muted loop id="background-video">
+        <source src="/assets/videos/space-bg.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+    <div class="shooting-stars"><span class="star"></span><span class="star"></span></div>
+    
+    <header class="analysis-page-header">
+        <a href="javascript:history.back()" class="back-button-user">← Quay Lại</a>
+        <div class="user-info-box">
+            <span>Tổng Token: <b id="coin-display">...</b></span>
+        </div>
+    </header>
+
+    <main class="analysis-main">
+        <div class="analysis-frame">
+            <div class="analysis-frame-inner">
+                <div id="frame-wide-effects">
+                    <div id="particle-field"></div>
+                </div>
+                <div id="frame-wide-lightning"></div>
+
+                <div class="analysis-content">
+                    <div class="analysis-top-bar">
+                        <div id="progress-tag">
+                            <span id="progress-text">0%</span>
+                        </div>
+                        <div class="gif-placeholder">
+                            <img src="/assets/images/premium.gif" alt="Premium Tag">
+                        </div>
+                    </div>
+
+                    <div class="analysis-main-visual" id="analysis-main-visual">
+                        <div id="holographic-rings"></div>
+                        <img id="robot-image" src="/assets/images/robot-bg.png" alt="Analyzing...">
+                    </div>
+
+                    <div class="analysis-info-panel" id="analysis-info-panel">
+                        <div class="scan-effect-overlay"></div>
+                        
+                        <div class="game-display-area">
+                            <div class="panel-game-image-wrapper">
+                                <img id="panel-game-image" src="" alt="Game">
+                            </div>
+                        </div>
+                        <div class="info-boxes-area">
+                            <div id="info-box-1" class="led-info-box"><span>QUAY MỒI</span><small>0 vòng - Mức Min 0K</small></div>
+                            <div id="info-box-2" class="led-info-box"><span>QUAY AUTO</span><small>0 vòng - Mức Min 0K</small></div>
+                            <div id="info-box-3" class="led-info-box"><span>KHUNG GIỜ</span><small>Chưa có dữ liệu</small></div>
+                        </div>
+                    </div>
+                    
+                    <div id="game-name-display-bottom"></div>
+                </div>
+
+                <div class="analysis-footer">
+                    <div id="analysis-progress-container" style="display: none;">
+                        <p class="progress-status-text">Đang hội tụ năng lượng...</p>
+                        <div class="progress-bar-wrapper">
+                            <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                            <span id="progress-bar-text" class="progress-bar-text">0%</span>
+                        </div>
+                    </div>
+                    <button id="analyze-button" class="btn-primary">Bắt Đầu Phân Tích</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="/js/analysis.js"></script>
+</body>
+</html>

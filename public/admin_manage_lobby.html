@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Game trong Sảnh</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-page">
+    <header class="header fadeIn">
+        <a href="/admin_games.html" class="back-button">&larr; Quay lại Quản Lý Sảnh</a>
+        <button class="logout-button">
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span>Đăng Xuất</span>
+        </button>
+    </header>
+
+    <main class="fadeIn" style="animation-delay: 0.2s;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 id="lobby-name-title" style="margin-top:0;">Đang tải...</h2>
+            <button class="btn-primary" style="width: auto; padding: 12px 20px;" onclick="openAddGameModal()">+ Thêm Game Mới</button>
+        </div>
+        <div id="game-container" class="grid-container" style="margin-top: 20px;">
+            <!-- Game cards will be inserted here -->
+        </div>
+    </main>
+
+    <!-- Modal Thêm Game Mới -->
+    <div id="addGameModal" class="modal">
+        <div class="modal-content fadeIn">
+            <span class="close-btn" onclick="closeModals()">&times;</span>
+            <h2>Thêm Game Mới</h2>
+            <p id="modal-message"></p>
+            <form id="add-game-form">
+                <input type="hidden" name="lobby_id" id="game-lobby-id">
+                <div class="form-group"><input type="text" name="name" placeholder="Tên Game" required></div>
+                <div class="form-group"><label>Ảnh Game</label><input type="file" name="image" accept="image/*" required></div>
+                <button type="submit" class="btn-primary">Thêm Game</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const lobbyNameTitle = document.getElementById('lobby-name-title');
+        const addGameModal = document.getElementById('addGameModal');
+        const addGameForm = document.getElementById('add-game-form');
+        const modalMessageEl = document.getElementById('modal-message');
+
+        const params = new URLSearchParams(window.location.search);
+        const lobbyId = params.get('id');
+        const lobbyName = decodeURIComponent(params.get('name'));
+
+        function openAddGameModal() {
+            document.getElementById('game-lobby-id').value = lobbyId;
+            addGameModal.style.display = 'flex';
+        }
+        function closeModals() {
+            addGameModal.style.display = 'none';
+            modalMessageEl.textContent = '';
+        }
+
+        async function fetchAndDisplayGames() {
+            if (!lobbyId) {
+                gameContainer.innerHTML = '<p>Lỗi: Không tìm thấy ID của sảnh.</p>';
+                return;
+            }
+            
+            lobbyNameTitle.textContent = `Quản lý game cho sảnh "${lobbyName}"`;
+
+            const response = await fetch(`/api/games?lobby_id=${lobbyId}`);
+            const data = await response.json();
+            
+            gameContainer.innerHTML = '';
+            if (data.success && data.games.length > 0) {
+                data.games.forEach(game => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.position = 'relative';
+                    card.innerHTML = `
+                        <h4>${game.name}</h4>
+                        <img src="${game.image_url}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">
+                        <button class="btn-danger" onclick="deleteGame(${game.id}, '${game.name}')" style="position: absolute; top: 10px; right: 10px; padding: 5px 8px; font-size: 0.8em;">Xóa</button>
+                    `;
+                    gameContainer.appendChild(card);
+                });
+            } else {
+                gameContainer.innerHTML = `<p style="text-align:center; color: var(--admin-text-subtle); grid-column: 1 / -1;">Chưa có game nào trong sảnh này. Hãy thêm game mới.</p>`;
+            }
+        }
+
+        async function deleteGame(gameId, gameName) {
+            if (confirm(`Bạn có chắc chắn muốn xóa game "${gameName}" không?`)) {
+                const response = await fetch('/api/delete-game', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId: gameId })
+                });
+                const result = await response.json();
+                alert(result.message);
+                if (result.success) {
+                    fetchAndDisplayGames();
+                }
+            }
+        }
+
+        addGameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            modalMessageEl.textContent = "Đang tải lên...";
+            const formData = new FormData(addGameForm);
+            const response = await fetch('/api/add-game', { method: 'POST', body: formData });
+            const result = await response.json();
+
+            if (result.success) {
+                 modalMessageEl.textContent = "Thêm game thành công!";
+                 setTimeout(() => {
+                    addGameForm.reset();
+                    closeModals();
+                    fetchAndDisplayGames();
+                 }, 1000);
+            } else {
+                 modalMessageEl.textContent = `Lỗi: ${result.message}`;
+            }
+        });
+
+        document.querySelector('.logout-button').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = '/';
+        });
+        window.onclick = (event) => {
+            if (event.target == addGameModal) {
+                closeModals();
+            }
+        }
+        window.onload = fetchAndDisplayGames;
+    </script>
+</body>
+</html>

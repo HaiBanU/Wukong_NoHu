@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chọn Trang Game</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/user.css"> 
+    <link rel="stylesheet" href="/css/brand-selection-final.css">
+    
+    <style>
+        .terminal-notification {
+            bottom: 35px;
+            left: 35px;
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted loop id="background-video">
+        <source src="/assets/videos/space-bg.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+    
+    <div class="shooting-stars">
+        <span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span>
+    </div>
+
+    <header class="header fadeIn">
+        <div class="header-left"><div id="welcome-message">Chào, ...!</div></div>
+        <div class="header-center"><div id="live-clock-container"></div></div>
+        <div class="header-right">
+             <div class="header-right-content">
+                <div id="coin-display">Token: ...</div>
+                <button class="logout-button">Đăng Xuất</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="carousel-main-content fadeIn" style="animation-delay: 0.2s;">
+        <div class="carousel-container">
+            <div class="brand-slider" id="brand-slider">
+            </div>
+        </div>
+        <div class="carousel-controls">
+            <button id="prev-btn" class="control-btn"><span class="arrow">&#9664;</span> BACK</button>
+            <button id="next-btn" class="control-btn">NEXT <span class="arrow">&#9654;</span></button>
+        </div>
+    </main>
+
+    <div class="terminal-notification fadeIn" style="animation-delay: 0.5s;">
+        <div class="terminal-bot-icon"><img src="/assets/images/bot-icon.png" alt="Bot Icon"></div>
+        <div class="terminal-content">
+            <div class="terminal-header">Terminal</div>
+            <div class="terminal-body"><span id="terminal-message"></span><span class="cursor"></span></div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelector('.logout-button').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
+        function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
+        
+        const gameBrands = [ { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' } ];
+
+        window.onload = async () => {
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            const terminalMessages = [ "Hệ thống đã sẵn sàng...", "Vui lòng chọn một thương hiệu...", "Đang chờ lệnh của bạn." ];
+            let currentMessageIndex = 0; 
+            let typingInterval;
+            
+            function typeMessage(element, message) { 
+                if (typingInterval) clearInterval(typingInterval); 
+                let i = 0; 
+                element.innerHTML = ''; 
+                typingInterval = setInterval(() => { 
+                    if (i < message.length) { 
+                        element.textContent += message.charAt(i); i++; 
+                    } else { 
+                        clearInterval(typingInterval); 
+                    } 
+                }, 50); 
+            }
+            
+            function showNextTerminalMessage() { 
+                const messageEl = document.getElementById('terminal-message'); 
+                if (!messageEl) return; 
+                const messageToShow = terminalMessages[currentMessageIndex]; 
+                typeMessage(messageEl, messageToShow); 
+                currentMessageIndex = (currentMessageIndex + 1) % terminalMessages.length; 
+            }
+            showNextTerminalMessage();
+            setInterval(showNextTerminalMessage, 8000);
+
+            const username = localStorage.getItem('username');
+            if (!username) { window.location.href = '/'; return; }
+            try {
+                const userRes = await fetch(`/api/user-info?username=${username}`);
+                const userData = await userRes.json();
+                if (userData.success) {
+                    document.getElementById('welcome-message').textContent = `Chào, ${userData.userInfo.username}!`;
+                    document.getElementById('coin-display').textContent = `Token: ${userData.userInfo.coins}`;
+                }
+            } catch (e) { console.error("Lỗi fetch user info", e); }
+
+            const slider = document.getElementById('brand-slider');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            slider.innerHTML = gameBrands.map(brand => `
+                <div class="brand-card" data-brand-name="${brand.name}">
+                    <div class="brand-card-inner">
+                         <div class="logo-background">
+                            <img class="brand-logo" src="/assets/logos/${brand.logo}" alt="${brand.name}">
+                        </div>
+                        <div class="brand-name">${brand.name}</div>
+                    </div>
+                </div>`
+            ).join('');
+
+            const cards = document.querySelectorAll('.brand-card');
+            let activeIndex = 0;
+
+            function updateCarousel() {
+                cards.forEach((card, i) => {
+                    card.classList.remove('active', 'prev', 'next');
+                    const prevIndex = (activeIndex - 1 + cards.length) % cards.length;
+                    const nextIndex = (activeIndex + 1) % cards.length;
+                    if (i === activeIndex) card.classList.add('active');
+                    else if (i === prevIndex) card.classList.add('prev');
+                    else if (i === nextIndex) card.classList.add('next');
+                });
+            }
+
+            nextBtn.addEventListener('click', () => { activeIndex = (activeIndex + 1) % cards.length; updateCarousel(); });
+            prevBtn.addEventListener('click', () => { activeIndex = (activeIndex - 1 + cards.length) % cards.length; updateCarousel(); });
+            
+            slider.addEventListener('click', (e) => {
+                const clickedCard = e.target.closest('.brand-card');
+                if (!clickedCard) return;
+
+                if (clickedCard.classList.contains('active')) {
+                    const brandName = clickedCard.dataset.brandName;
+                    sessionStorage.setItem('selectedBrand', brandName);
+                    window.location.href = `/dashboard.html`;
+                } 
+                else if (clickedCard.classList.contains('next')) { activeIndex = (activeIndex + 1) % cards.length; updateCarousel(); }
+                else if (clickedCard.classList.contains('prev')) { activeIndex = (activeIndex - 1 + cards.length) % cards.length; updateCarousel(); }
+            });
+
+            updateCarousel();
+        };
+    </script>
+</body>
+</html>
