@@ -117,14 +117,18 @@
             users.forEach(user => {
                 const item = document.createElement('div');
                 item.className = 'user-item';
+                // === BẮT ĐẦU SỬA ĐỔI ===
+                // Thay thế tất cả user.id bằng user._id
+                // Thêm dấu nháy đơn ' ' xung quanh user._id trong các hàm onclick
                 item.innerHTML = `
                     <span>${user.username} (Token: ${user.coins})</span>
                     <div class="coin-controls">
-                        <input type="number" min="0" value="${user.coins}" id="coins-for-${user.id}">
-                        <button class="btn-primary" onclick="updateCoins(${user.id})">Cập nhật</button>
-                        <button class="btn-danger" onclick="deleteUser(${user.id}, '${user.username}')">Xóa</button>
+                        <input type="number" min="0" value="${user.coins}" id="coins-for-${user._id}">
+                        <button class="btn-primary" onclick="updateCoins('${user._id}')">Cập nhật</button>
+                        <button class="btn-danger" onclick="deleteUser('${user._id}', '${user.username}')">Xóa</button>
                     </div>
                 `;
+                // === KẾT THÚC SỬA ĐỔI ===
                 userListContainer.appendChild(item);
             });
         }

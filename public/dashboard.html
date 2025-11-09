@@ -86,7 +86,10 @@
             if (lobbyData.success && lobbyData.lobbies.length > 0) {
                 lobbyData.lobbies.forEach(lobby => {
                     const card = document.createElement('a');
-                    card.href = `/games.html?lobby_id=${lobby.id}&lobby_name=${encodeURIComponent(lobby.name)}`;
+                    // === BẮT ĐẦU SỬA ĐỔI ===
+                    // Thay thế lobby.id bằng lobby._id để lấy đúng ID từ MongoDB
+                    card.href = `/games.html?lobby_id=${lobby._id}&lobby_name=${encodeURIComponent(lobby.name)}`;
+                    // === KẾT THÚC SỬA ĐỔI ===
                     card.className = 'lobby-card';
                     card.innerHTML = `<div class="card-image-wrapper"><img src="${lobby.logo_url}" alt="${lobby.name}"></div><div class="card-title-bar"><p>${lobby.name}</p></div>`;
                     lobbyContainer.appendChild(card);
