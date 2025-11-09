@@ -77,11 +77,14 @@
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.style.position = 'relative';
+                    // === BẮT ĐẦU SỬA LỖI ===
+                    // Thay thế game.id bằng game._id và thêm dấu nháy đơn
                     card.innerHTML = `
                         <h4>${game.name}</h4>
                         <img src="${game.image_url}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">
-                        <button class="btn-danger" onclick="deleteGame(${game.id}, '${game.name}')" style="position: absolute; top: 10px; right: 10px; padding: 5px 8px; font-size: 0.8em;">Xóa</button>
+                        <button class="btn-danger" onclick="deleteGame('${game._id}', '${game.name}')" style="position: absolute; top: 10px; right: 10px; padding: 5px 8px; font-size: 0.8em;">Xóa</button>
                     `;
+                    // === KẾT THÚC SỬA LỖI ===
                     gameContainer.appendChild(card);
                 });
             } else {
