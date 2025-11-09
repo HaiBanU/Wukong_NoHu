@@ -12,10 +12,12 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.0",
+    "cloudinary": "^1.41.3",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "mongoose": "^8.19.3",
     "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0",
     "sqlite3": "^5.1.7"
   }
 }
