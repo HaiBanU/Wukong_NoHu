@@ -2,6 +2,23 @@
 #background-video { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); min-width: 100%; min-height: 100%; width: auto; height: auto; z-index: 1; object-fit: cover; }
 .video-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(164, 6, 6, 0.25); z-index: 2; }
 
+/* === SỬA LỖI SCROLL: Cho phép các trang cần cuộn có thể cuộn === */
+body.games-page, body.dashboard-page, body.brand-selection-page {
+    overflow-y: auto;
+}
+
+/* === SỬA ĐỔI: Thêm lại quy tắc cho MAIN chỉ trên màn hình lớn === */
+@media (min-width: 769px) {
+    main {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    body.dashboard-page .grid-container {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 25px;
+    }
+}
+
 /* === HIỆU ỨNG SAO BĂNG (USER) === */
 @keyframes shooting-star-fast { 0% { transform: rotate(315deg) translateX(0); opacity: 1; } 70% { opacity: 1; } 100% { transform: rotate(315deg) translateX(-150vw); opacity: 0; } }
 .shooting-stars { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 3; pointer-events: none; }
@@ -18,7 +35,7 @@
 .main-title { display: inline-block; background: linear-gradient(90deg, var(--secondary-red), var(--primary-red)); color: #fff; padding: 15px 40px; margin: 20px 0 40px; border-radius: 50px; font-size: 2em; text-transform: uppercase; font-family: 'Poppins', sans-serif; animation: title-pulse 3s infinite ease-in-out; }
 @keyframes title-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(217, 4, 41, 0.6); } 50% { transform: scale(1.03); box-shadow: 0 0 30px rgba(217, 4, 41, 0.9); } }
 
-/* === THẺ SẢNH (dashboard.html) === */
+/* === THẺ SẢNH (dashboard.html) - Phong cách cũ, giờ không dùng chính === */
 .grid-container { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
 .lobby-card { background: rgba(255, 255, 255, 0.95); border: 1px solid var(--border-color); border-radius: 16px; text-decoration: none; cursor: pointer; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
 .lobby-card:hover { transform: translateY(-10px) scale(1.02); box-shadow: var(--shadow-hover); border-color: var(--primary-red); }
@@ -28,12 +45,14 @@
 .card-title-bar { background: linear-gradient(90deg, var(--secondary-red), var(--primary-red)); color: white; padding: 12px; text-align: center; margin-top: auto; }
 .card-title-bar p { margin: 0; font-weight: 600; text-transform: uppercase; font-size: 0.9em; letter-spacing: 1px; }
 
-/* === THẺ GAME (games.html) === */
-.game-card-enhanced { background-color: #1c1113; border: 1px solid #8c2c2c; border-radius: 16px; cursor: pointer; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 15px rgba(217, 4, 41, 0.5); transition: all 0.2s ease-in-out; padding: 8px; }
+/* === THẺ GAME (games.html) VÀ THẺ SẢNH MỚI (dashboard.html) === */
+.game-card-enhanced { background-color: #1c1113; border: 1px solid #8c2c2c; border-radius: 16px; cursor: pointer; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 15px rgba(217, 4, 41, 0.5); transition: all 0.2s ease-in-out; padding: 8px; text-decoration: none; }
 .game-card-enhanced:hover { transform: translateY(-6px); box-shadow: 0 0 30px rgba(255, 79, 79, 0.7); border-color: var(--primary-red); }
 .game-card-inner-frame { background-color: #000; border-radius: 12px; padding: 5px; margin-bottom: 10px; border: 1px solid #8c2c2c; box-shadow: 0 0 15px 2px rgba(217, 4, 41, 0.6); transition: box-shadow 0.2s ease-in-out; }
 .game-card-enhanced:hover .game-card-inner-frame { box-shadow: 0 0 20px 4px rgba(255, 79, 79, 0.8); }
 .game-card-enhanced .card-image-wrapper { aspect-ratio: 1 / 1; border-radius: 8px; }
+.dashboard-lobby-card .card-image-wrapper { aspect-ratio: 16 / 10; }
+.dashboard-lobby-card .card-image-wrapper img { object-fit: cover; }
 .game-card-enhanced .card-image-wrapper img { border-radius: 8px; }
 .game-card-content { padding: 0; display: flex; flex-direction: column; flex-grow: 1; }
 .game-info { text-align: center; margin-bottom: 8px; }
@@ -67,12 +86,43 @@ body:not(.login-page):not(.games-page) .header { display: flex; justify-content:
 .status-tag.tag-play { background: linear-gradient(45deg, #ffc62b, #ff8e00); box-shadow: 0 0 12px rgba(255, 198, 43, 0.8); }
 .status-tag.tag-wait { background: linear-gradient(45deg, #d90429, #ef233c); box-shadow: 0 0 12px rgba(217, 4, 41, 0.8); }
 
+/* === THÊM MỚI: STYLE CHO Ô TÌM KIẾM GAME === */
+.search-container {
+    margin-bottom: 30px;
+    text-align: center;
+}
+#game-search-input {
+    width: 50%;
+    max-width: 500px;
+    padding: 12px 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid #8c2c2c;
+    border-radius: 50px;
+    color: #fff;
+    font-size: 1em;
+    outline: none;
+    transition: all 0.3s ease;
+}
+#game-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+#game-search-input:focus {
+    box-shadow: 0 0 15px var(--primary-red);
+    border-color: var(--primary-red);
+}
+
 /* === STYLE NÂNG CẤP CHO BẢNG THÔNG BÁO TERMINAL === */
-/* ... (toàn bộ style của terminal giữ nguyên) ... */
 @keyframes bot-float { 0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 10px rgba(255, 195, 0, 0.6)); } 50% { transform: translateY(-8px); filter: drop-shadow(0 0 18px rgba(255, 195, 0, 0.9)); } }
 @keyframes terminal-glow { 0%, 100% { box-shadow: 0 0 20px rgba(255, 195, 0, 0.4); } 50% { box-shadow: 0 0 30px rgba(255, 195, 0, 0.7); } }
 @keyframes scanline-effect { 0% { transform: translateY(-20px); opacity: 0; } 20% { opacity: 0.7; } 80% { opacity: 0.7; } 100% { transform: translateY(120px); opacity: 0; } }
-.terminal-notification { position: fixed; bottom: 25px; left: 40px; z-index: 100; position: relative; width: 80px; height: 80px; }
+.terminal-notification {
+    position: fixed;
+    bottom: 25px;
+    left: 40px;
+    z-index: 100;
+    width: 80px;
+    height: 80px;
+}
 .terminal-bot-icon img { width: 100%; height: 100%; animation: bot-float 3s infinite ease-in-out; }
 .terminal-content { position: absolute; bottom: 100px; left: 0; width: 300px; background: linear-gradient(135deg, rgba(20, 15, 0, 0.7), rgba(0, 0, 0, 0.8)); border: 1px solid rgba(255, 195, 0, 0.6); border-radius: 8px; backdrop-filter: blur(10px); overflow: hidden; animation: terminal-glow 3s infinite ease-in-out; }
 .terminal-content::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid rgba(255, 195, 0, 0.6); }
@@ -81,3 +131,82 @@ body:not(.login-page):not(.games-page) .header { display: flex; justify-content:
 .terminal-body { padding: 15px; color: #e0e0e0; font-family: monospace; font-size: 0.95em; line-height: 1.4; }
 .cursor { display: inline-block; width: 10px; height: 1em; background-color: #FFC300; margin-left: 5px; animation: blink 1s infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/*
+======================================================
+=== "ĐẠI TU" TOÀN BỘ GIAO DIỆN MOBILE (PHIÊN BẢN CUỐI) ===
+======================================================
+*/
+@media (max-width: 768px) {
+    main {
+        padding: 20px 10px;
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box; 
+    }
+
+    body.dashboard-page .header, 
+    body.brand-selection-page .header {
+        flex-wrap: wrap; 
+        padding-bottom: 10px;
+    }
+    body.dashboard-page .header-left, 
+    body.brand-selection-page .header-left,
+    body.dashboard-page .header-right,
+    body.brand-selection-page .header-right {
+        flex-basis: 50%;
+    }
+    body.dashboard-page .header-center,
+    body.brand-selection-page .header-center {
+        flex-basis: 100%; 
+        order: 3; 
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .header-right-content { padding: 5px 8px; }
+    .logout-button span { display: none; } 
+    .games-header #lobby-title { font-size: 1.5em; }
+    .back-button-user { font-size: 1.1em; left: 15px; }
+    .games-header #live-clock-container { right: 15px; }
+
+    .grid-container {
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 15px;
+        padding: 0;
+    }
+    
+    body.games-page .grid-container {
+        grid-template-columns: 1fr; 
+        gap: 15px;
+        padding: 0 10%; 
+    }
+
+    .main-title {
+        font-size: 1.5em;
+        padding: 12px 25px;
+        margin-bottom: 25px;
+    }
+    
+    .card-title-bar p {
+        font-size: 0.8em;
+    }
+    
+    .game-name { font-size: 0.8em; }
+    
+    /* === SỬA ĐỔI: Style cho ô tìm kiếm trên mobile === */
+    #game-search-input {
+        width: 90%;
+    }
+
+    .terminal-notification {
+        left: 10px;
+        bottom: 25px; 
+        transform: scale(1);
+        transform-origin: bottom left;
+    }
+    .terminal-content {
+        width: 280px; 
+        bottom: 100px;
+    }
+}

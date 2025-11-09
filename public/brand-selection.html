@@ -2,30 +2,19 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chọn Trang Game</title>
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/user.css"> 
     <link rel="stylesheet" href="/css/brand-selection-final.css">
-    
-    <style>
-        .terminal-notification {
-            bottom: 35px;
-            left: 35px;
-        }
-    </style>
 </head>
-<body>
+<body class="brand-selection-page">
     <video autoplay muted loop id="background-video">
         <source src="/assets/videos/space-bg.mp4" type="video/mp4">
     </video>
     <div class="video-overlay"></div>
     
-    <div class="shooting-stars">
-        <span class="star"></span><span class="star"></span><span class="star"></span>
-        <span class="star"></span><span class="star"></span><span class="star"></span>
-        <span class="star"></span><span class="star"></span><span class="star"></span>
-        <span class="star"></span><span class="star"></span><span class="star"></span>
-    </div>
+    <div class="shooting-stars"><span class="star"></span><span class="star"></span></div>
 
     <header class="header fadeIn">
         <div class="header-left"><div id="welcome-message">Chào, ...!</div></div>
@@ -39,8 +28,10 @@
     </header>
 
     <main class="carousel-main-content fadeIn" style="animation-delay: 0.2s;">
+        <h2 class="main-title">CHỌN THƯƠNG HIỆU</h2>
         <div class="carousel-container">
             <div class="brand-slider" id="brand-slider">
+                <!-- Các thẻ thương hiệu sẽ được JavaScript chèn vào đây -->
             </div>
         </div>
         <div class="carousel-controls">
@@ -68,29 +59,9 @@
             setInterval(updateClock, 1000);
             
             const terminalMessages = [ "Hệ thống đã sẵn sàng...", "Vui lòng chọn một thương hiệu...", "Đang chờ lệnh của bạn." ];
-            let currentMessageIndex = 0; 
-            let typingInterval;
-            
-            function typeMessage(element, message) { 
-                if (typingInterval) clearInterval(typingInterval); 
-                let i = 0; 
-                element.innerHTML = ''; 
-                typingInterval = setInterval(() => { 
-                    if (i < message.length) { 
-                        element.textContent += message.charAt(i); i++; 
-                    } else { 
-                        clearInterval(typingInterval); 
-                    } 
-                }, 50); 
-            }
-            
-            function showNextTerminalMessage() { 
-                const messageEl = document.getElementById('terminal-message'); 
-                if (!messageEl) return; 
-                const messageToShow = terminalMessages[currentMessageIndex]; 
-                typeMessage(messageEl, messageToShow); 
-                currentMessageIndex = (currentMessageIndex + 1) % terminalMessages.length; 
-            }
+            let currentMessageIndex = 0; let typingInterval;
+            function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
+            function showNextTerminalMessage() { const messageEl = document.getElementById('terminal-message'); if (!messageEl) return; const messageToShow = terminalMessages[currentMessageIndex]; typeMessage(messageEl, messageToShow); currentMessageIndex = (currentMessageIndex + 1) % terminalMessages.length; }
             showNextTerminalMessage();
             setInterval(showNextTerminalMessage, 8000);
 

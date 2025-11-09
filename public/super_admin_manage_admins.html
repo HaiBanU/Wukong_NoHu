@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Admin Phụ</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .card { padding: 25px; }
+        .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--border-color); }
+        .admin-item:last-child { border-bottom: none; }
+        .coin-controls { display: flex; align-items: center; gap: 10px; }
+        .coin-controls input { width: 100px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-danger { background: #dc3545; color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+        #modal-message { margin-top: 15px; font-weight: bold; text-align: center; height: 20px; }
+    </style>
+</head>
+<body class="admin-page">
+    <header class="header fadeIn">
+        <a href="/admin.html" class="back-button">&larr; Quay lại Menu</a>
+        <button class="logout-button">
+            <span>Đăng Xuất</span>
+        </button>
+    </header>
+
+    <main class="fadeIn" style="animation-delay: 0.2s;">
+        <div class="page-header">
+            <h2 style="margin-top:0;">Quản Lý Admin Phụ</h2>
+            <button class="btn-primary" style="width: auto; padding: 12px 20px;" onclick="openCreateAdminModal()">+ Tạo Admin Mới</button>
+        </div>
+
+        <div id="admin-list-container" class="card"></div>
+        <p id="message"></p>
+    </main>
+    
+    <!-- Modal Tạo Admin Mới -->
+    <div id="createAdminModal" class="modal">
+        <div class="modal-content fadeIn">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>Tạo Tài Khoản Admin Mới</h2>
+            <form id="create-admin-form">
+                <div class="form-group"><input type="text" id="new-admin-username" placeholder="Tên đăng nhập" required></div>
+                <div class="form-group"><input type="password" id="new-admin-password" placeholder="Mật khẩu" required></div>
+                <button type="submit" class="btn-primary">Tạo Tài Khoản</button>
+            </form>
+            <p id="modal-message"></p>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelector('.logout-button').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = '/';
+        });
+
+        const adminListContainer = document.getElementById('admin-list-container');
+        const messageEl = document.getElementById('message');
+        const modalMessageEl = document.getElementById('modal-message');
+        const createAdminModal = document.getElementById('createAdminModal');
+        const createAdminForm = document.getElementById('create-admin-form');
+
+        function showMessage(msg, isSuccess) {
+            messageEl.textContent = msg;
+            messageEl.className = isSuccess ? 'success' : 'error';
+            setTimeout(() => { messageEl.textContent = ''; }, 4000);
+        }
+        function showModalMessage(msg, isSuccess) {
+            modalMessageEl.textContent = msg;
+            modalMessageEl.className = isSuccess ? 'success' : 'error';
+        }
+        function openCreateAdminModal() { createAdminModal.style.display = 'flex'; }
+        function closeModal() {
+            createAdminModal.style.display = 'none';
+            createAdminForm.reset();
+            showModalMessage('', true);
+        }
+
+        async function fetchAndDisplayAdmins() {
+            const response = await fetch('/api/sub-admins');
+            const data = await response.json();
+            adminListContainer.innerHTML = '';
+            if (data.success && data.admins.length > 0) {
+                data.admins.forEach(admin => {
+                    const item = document.createElement('div');
+                    item.className = 'admin-item';
+                    item.innerHTML = `
+                        <span>${admin.username} (Token: ${admin.coins})</span>
+                        <div class="coin-controls">
+                            <input type="number" min="1" placeholder="Số Token cấp" id="coins-for-${admin._id}">
+                            <button class="btn-primary" onclick="grantCoins('${admin._id}')">Cấp</button>
+                            <button class="btn-danger" onclick="deleteAdmin('${admin._id}', '${admin.username}')">Xóa</button>
+                        </div>
+                    `;
+                    adminListContainer.appendChild(item);
+                });
+            } else {
+                adminListContainer.innerHTML = '<p style="text-align:center; color: var(--text-light);">Chưa có Admin phụ nào.</p>';
+            }
+        }
+        
+        createAdminForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showModalMessage('Đang xử lý...', true);
+            const username = document.getElementById('new-admin-username').value;
+            const password = document.getElementById('new-admin-password').value;
+            
+            const response = await fetch('/api/create-sub-admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                showModalMessage(result.message, true);
+                setTimeout(() => { closeModal(); fetchAndDisplayAdmins(); }, 1500);
+            } else {
+                showModalMessage(result.message, false);
+            }
+        });
+
+        async function grantCoins(adminId) {
+            const amountInput = document.getElementById(`coins-for-${adminId}`);
+            if (!amountInput.value) {
+                showMessage("Vui lòng nhập số Token cần cấp.", false);
+                return;
+            }
+            const response = await fetch('/api/grant-coins-to-admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminId, amount: amountInput.value })
+            });
+            const result = await response.json();
+            showMessage(result.message, result.success);
+            if (result.success) {
+                amountInput.value = '';
+                fetchAndDisplayAdmins();
+            }
+        }
+        
+        async function deleteAdmin(adminId, username) {
+            if (confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn Admin "${username}" không? Toàn bộ user do admin này quản lý sẽ bị gỡ.`)) {
+                const response = await fetch('/api/delete-sub-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminId })
+                });
+                const result = await response.json();
+                showMessage(result.message, result.success);
+                if (result.success) {
+                    fetchAndDisplayAdmins();
+                }
+            }
+        }
+
+        window.onload = fetchAndDisplayAdmins;
+        window.onclick = (event) => {
+            if (event.target == createAdminModal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

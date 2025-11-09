@@ -1,4 +1,4 @@
-/* Giao diện cuối cùng: Carousel 3D */
+/* Giao diện cuối cùng: Carousel 3D cho Desktop, Lưới 2 cột cho Mobile */
 
 body {
     overflow: hidden;
@@ -7,7 +7,7 @@ body {
 }
 
 /* ======================================= */
-/* === CONTAINER & HIỆU ỨNG 3D         === */
+/* === CONTAINER & HIỆU ỨNG 3D (DESKTOP) === */
 /* ======================================= */
 .carousel-main-content {
     flex-grow: 1;
@@ -20,31 +20,26 @@ body {
     padding: 20px 0;
 }
 
-/* Container chính, tạo không gian 3D */
 .carousel-container {
     width: 100%;
-    /* THAY ĐỔI: Tăng chiều cao container để chứa vừa thẻ lớn hơn */
     height: 520px; 
     display: flex;
     justify-content: center;
     align-items: center;
-    perspective: 1200px; /* Quan trọng: Tạo chiều sâu */
+    perspective: 1200px;
 }
 
-/* Slider chứa các thẻ, bật chế độ 3D */
 .brand-slider {
     position: relative;
-    /* THAY ĐỔI: Tăng kích thước của thẻ active */
     width: 320px;
     height: 480px;
     transform-style: preserve-3d;
 }
 
 /* ======================================= */
-/* === THIẾT KẾ THẺ BÀI (Giữ nguyên)    === */
+/* === THIẾT KẾ THẺ BÀI (Chung) === */
 /* ======================================= */
 
-/* Sửa lại: Các thẻ sẽ xếp chồng lên nhau bằng position: absolute */
 .brand-card {
     position: absolute;
     top: 0;
@@ -55,7 +50,6 @@ body {
     user-select: none;
     border-radius: 20px;
     overflow: hidden;
-    /* Hiệu ứng chuyển động mượt mà */
     transition: transform 0.5s ease, opacity 0.5s ease;
 }
 
@@ -68,7 +62,7 @@ body {
     height: 200%;
     background: conic-gradient(from 0deg, transparent 0%, transparent 80%, var(--primary-red) 95%, var(--primary-red) 100%);
     animation: led-border-spin 2s linear infinite;
-    transform-origin: 0 0; /* Sửa lại tâm xoay */
+    transform-origin: 0 0;
 }
 
 @keyframes led-border-spin {
@@ -95,43 +89,96 @@ body {
 .brand-name { font-size: 1.5em; font-weight: 700; font-family: 'Poppins', sans-serif; color: var(--primary-red); text-shadow: 0 0 15px var(--primary-red); }
 
 /* ======================================= */
-/* === VỊ TRÍ CÁC THẺ TRONG CAROUSEL    === */
+/* === VỊ TRÍ 3D (DESKTOP) === */
 /* ======================================= */
-
-/* Thẻ ở giữa (active) */
-.brand-card.active {
-    transform: translateX(0) translateZ(0) scale(1);
-    opacity: 1;
-    z-index: 100;
-}
-
-/* Thẻ bên trái (prev) */
-.brand-card.prev {
-    /* THAY ĐỔI: Tăng khoảng cách đẩy sang trái */
-    transform: translateX(-75%) translateZ(-200px) scale(0.8);
-    opacity: 0.6;
-    z-index: 90;
-}
-
-/* Thẻ bên phải (next) */
-.brand-card.next {
-    /* THAY ĐỔI: Tăng khoảng cách đẩy sang phải */
-    transform: translateX(75%) translateZ(-200px) scale(0.8);
-    opacity: 0.6;
-    z-index: 90;
-}
-
-/* Các thẻ còn lại sẽ ẩn đi */
-.brand-card:not(.active):not(.prev):not(.next) {
-    transform: scale(0.5);
-    opacity: 0;
-    pointer-events: none; /* Không cho phép click */
-}
+.brand-card.active { transform: translateX(0) translateZ(0) scale(1); opacity: 1; z-index: 100; }
+.brand-card.prev { transform: translateX(-75%) translateZ(-200px) scale(0.8); opacity: 0.6; z-index: 90; }
+.brand-card.next { transform: translateX(75%) translateZ(-200px) scale(0.8); opacity: 0.6; z-index: 90; }
+.brand-card:not(.active):not(.prev):not(.next) { transform: scale(0.5); opacity: 0; pointer-events: none; }
 
 /* ======================================= */
-/* === NÚT ĐIỀU KHIỂN                  ==== */
+/* === NÚT ĐIỀU KHIỂN (DESKTOP) === */
 /* ======================================= */
 .carousel-controls { display: flex; justify-content: space-between; width: 100%; max-width: 800px; margin-top: 20px; }
 .control-btn { background: transparent; border: none; color: #fff; font-size: 1.2em; font-family: 'Poppins', sans-serif; font-weight: 700; cursor: pointer; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); transition: all 0.2s ease; padding: 10px 20px; display: flex; align-items: center; gap: 10px; }
 .control-btn:hover { color: var(--primary-red); text-shadow: 0 0 15px var(--primary-red); transform: scale(1.1); }
 .control-btn .arrow { font-size: 1.5em; }
+
+@media (max-width: 768px) {
+    .carousel-main-content {
+        /* Ghi đè lại để nó thành main-content bình thường */
+        flex-grow: 1;
+        display: block;
+        width: auto;
+        padding: 20px 10px;
+    }
+    
+    .carousel-container {
+        display: block;
+        height: auto;
+        perspective: none; /* Tắt 3D */
+    }
+
+    .brand-slider {
+        /* Chuyển thành layout lưới */
+        transform-style: flat;
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px; /* === SỬA ĐỔI: Tăng khoảng cách giữa các thẻ === */
+        width: 100%;
+        height: auto;
+    }
+
+    .brand-card {
+        /* Reset thuộc tính desktop */
+        position: static;
+        opacity: 1 !important;
+        transform: none !important;
+        z-index: 1 !important;
+        
+        /* Chuyển thành card trong lưới */
+        height: auto;
+        /* Áp dụng lại style giống lobby-card */
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .brand-card::before { display: none; } /* Tắt viền led quay trên mobile */
+    
+    .brand-card-inner {
+        position: static;
+        inset: auto;
+        background: transparent;
+        backdrop-filter: none;
+        gap: 10px;
+        padding: 0;
+    }
+
+    .logo-background {
+        width: 100%;
+        aspect-ratio: 16/10; /* Tỷ lệ giống lobby-card */
+        background-color: #fff;
+        border-radius: 0;
+        padding: 15px;
+        box-shadow: none;
+    }
+
+    .brand-name {
+        /* === SỬA ĐỔI: Làm thanh tiêu đề to và rõ hơn === */
+        width: 100%;
+        font-size: 0.9em; /* Phóng to chữ */
+        text-shadow: none;
+        color: white;
+        background: linear-gradient(90deg, var(--secondary-red), var(--primary-red));
+        padding: 15px 0; /* Tăng chiều cao thanh tiêu đề */
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    /* Ẩn nút điều khiển Back/Next trên mobile */
+    .carousel-controls {
+        display: none;
+    }
+}

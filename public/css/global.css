@@ -18,14 +18,15 @@ body {
     margin: 0;
     overflow: hidden; /* Mặc định ẩn cuộn, các trang con sẽ tự ghi đè nếu cần */
 }
+
+/* === SỬA ĐỔI: Đã xóa max-width và margin auto === */
 main { 
     padding: 30px; 
-    max-width: 1000px; 
-    margin: 0 auto;
     position: relative; 
     z-index: 5;
     text-align: center;
 }
+
 .fadeIn { 
     animation: fadeIn 0.6s ease-in-out; 
 }

@@ -18,7 +18,6 @@
 
     <div class="login-container fadeIn">
         <div class="login-promo-panel">
-            <!-- ĐÃ SỬA: ĐƯA THẺ IMG TRỞ LẠI VÀO ĐÂY -->
             <img src="/assets/images/promo.gif" alt="Promo Animation">
         </div>
         <div class="login-form-panel">
@@ -43,7 +42,6 @@
     </div>
     
     <script>
-        // --- PHẦN JAVASCRIPT GIỮ NGUYÊN, KHÔNG CẦN THAY ĐỔI ---
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
         const toggleBtn = document.getElementById('toggle-btn');
@@ -102,6 +100,8 @@
                 localStorage.setItem('username', username);
                 if (data.isAdmin) {
                     localStorage.setItem('adminId', data.userId);
+                    // === ĐÃ SỬA: Lưu trạng thái Super Admin ===
+                    localStorage.setItem('isSuperAdmin', data.isSuperAdmin); 
                 }
                 window.location.href = data.isAdmin ? '/admin.html' : '/brand-selection.html';
             } else {

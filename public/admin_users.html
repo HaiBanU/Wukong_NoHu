@@ -25,7 +25,7 @@
     <header class="header fadeIn">
         <a href="/admin.html" class="back-button">&larr; Quay lại Menu</a>
         <button class="logout-button">
-             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 S0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             <span>Đăng Xuất</span>
         </button>
     </header>
@@ -117,9 +117,6 @@
             users.forEach(user => {
                 const item = document.createElement('div');
                 item.className = 'user-item';
-                // === BẮT ĐẦU SỬA ĐỔI ===
-                // Thay thế tất cả user.id bằng user._id
-                // Thêm dấu nháy đơn ' ' xung quanh user._id trong các hàm onclick
                 item.innerHTML = `
                     <span>${user.username} (Token: ${user.coins})</span>
                     <div class="coin-controls">
@@ -128,7 +125,6 @@
                         <button class="btn-danger" onclick="deleteUser('${user._id}', '${user.username}')">Xóa</button>
                     </div>
                 `;
-                // === KẾT THÚC SỬA ĐỔI ===
                 userListContainer.appendChild(item);
             });
         }
@@ -165,10 +161,13 @@
 
         async function updateCoins(userId) {
             const coinInput = document.getElementById(`coins-for-${userId}`);
+            const adminId = localStorage.getItem('adminId'); // Lấy adminId từ localStorage
+
             const response = await fetch('/api/update-coins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: userId, coins: coinInput.value })
+                // === ĐÃ SỬA: Gửi thêm adminId vào body ===
+                body: JSON.stringify({ userId: userId, coins: coinInput.value, adminId: adminId })
             });
             const result = await response.json();
             showMessage(result.message, result.success);
