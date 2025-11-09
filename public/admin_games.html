@@ -58,7 +58,7 @@
             if (data.success && data.lobbies.length > 0) {
                 data.lobbies.forEach(lobby => {
                     const cardLink = document.createElement('a');
-                    cardLink.href = `/admin_manage_lobby.html?id=${lobby.id}&name=${encodeURIComponent(lobby.name)}`;
+                    cardLink.href = `/admin_manage_lobby.html?id=${lobby._id}&name=${encodeURIComponent(lobby.name)}`;
                     cardLink.className = 'card';
                     cardLink.style.textDecoration = 'none'; 
                     cardLink.style.color = 'inherit';
