@@ -23,9 +23,10 @@ window.onload = () => {
     const initialWinRate = params.get('winRate');
     const lobbyName = decodeURIComponent(params.get('lobbyName'));
     const username = localStorage.getItem('username');
+    const selectedBrand = sessionStorage.getItem('selectedBrand'); // Lấy thương hiệu đã chọn
 
-    if (!username || !gameName || !imageUrl || !lobbyName) { 
-        alert("Lỗi: Thiếu thông tin game hoặc sảnh."); 
+    if (!username || !gameName || !imageUrl || !lobbyName || !selectedBrand) { 
+        alert("Lỗi: Thiếu thông tin game, sảnh hoặc thương hiệu."); 
         window.location.href = '/dashboard.html'; 
         return; 
     }
@@ -37,7 +38,19 @@ window.onload = () => {
     const createLightningField = (count = 6) => { const paths=["M15 0 L10 20 L18 20 L12 45 L22 45 L8 75 L16 75 L11 100","M18 0 L12 25 L20 25 L10 50 L25 50 L5 80 L15 80 L10 100","M12 0 L18 30 L10 30 L16 60 L8 60 L20 90 L14 90 L10 100"]; let html=''; for(let i=0; i < count; i++){const p=paths[Math.floor(Math.random()*paths.length)];html+=`<div class="lightning-container" style="--delay: -${Math.random()}s; --duration: ${Math.random() * 0.5 + 0.8}s;"><svg class="lightning-svg" viewBox="0 0 30 100"><path d="${p}" stroke="currentColor" stroke-width="2" fill="none"/></svg></div>`;} return html; };
     const createEnergyRain = (container) => { if (!container) return; container.innerHTML = ''; const count = 40; const colors = ['#ffd700', '#00ffff']; for (let i = 0; i < count; i++) { const p = document.createElement('div'); p.className = 'particle'; p.style.cssText = `height:${Math.random()*30+15}px;left:${Math.random()*100}%;animation-duration:${Math.random()*1.5+1}s;animation-delay:${Math.random()*3}s;color:${colors[Math.floor(Math.random()*colors.length)]};`; container.appendChild(p); } };
     const createHolographicRings = (container) => { if (!container) return; container.innerHTML = ''; for (let i = 0; i < 3; i++) { const r = document.createElement('div'); r.className = 'ring'; r.style.cssText = `width:${(i+1)*90}px;height:${(i+1)*90}px;animation-delay:${i*0.9}s;`; container.appendChild(r); } };
-    const fetchUserInfo = async () => { try { const res = await fetch(`/api/user-info?username=${username}`); const data = await res.json(); if (data.success) coinDisplay.textContent = data.userInfo.coins; } catch (e) { console.error("Lỗi fetch user info", e); } };
+    
+    const fetchUserInfo = async () => { 
+        try { 
+            const res = await fetch(`/api/user-info?username=${username}`); 
+            const data = await res.json(); 
+            if (data.success) {
+                // === THAY ĐỔI: Hiển thị token theo thương hiệu ===
+                const coinsByBrand = data.userInfo.coins_by_brand || {};
+                const currentCoins = coinsByBrand[selectedBrand] || 0;
+                coinDisplay.textContent = currentCoins;
+            } 
+        } catch (e) { console.error("Lỗi fetch user info", e); } 
+    };
 
     // === HÀM KHỞI TẠO GIAO DIỆN (ĐÃ SỬA) ===
     function initializeUI() {
@@ -58,7 +71,7 @@ window.onload = () => {
         progressTag.classList.remove('result-state');
         
         [infoBox1, infoBox2, infoBox3].forEach(box => {
-            box.classList.remove('result-reveal', 'result-highlight'); // Xóa cả class highlight
+            box.classList.remove('result-reveal', 'result-highlight');
             const title = box.querySelector('span').textContent;
             box.innerHTML = `<span>${title}</span><small>0 vòng - Mức Min 0K</small>`;
         });
@@ -101,7 +114,6 @@ window.onload = () => {
         
         [infoBox1, infoBox2, infoBox3].forEach((box, index) => {
             box.style.animationDelay = `${index * 0.15}s`;
-            // Thêm cả hai class để vừa hiện ra, vừa có hiệu ứng highlight
             box.classList.add('result-reveal', 'result-highlight');
         });
     }
@@ -146,7 +158,8 @@ window.onload = () => {
                     headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify({ 
                         username: username,
-                        winRate: initialWinRate
+                        winRate: initialWinRate,
+                        brandName: selectedBrand // Gửi kèm tên thương hiệu
                     }) 
                 });
                 const result = await response.json();

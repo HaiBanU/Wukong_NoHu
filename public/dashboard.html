@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/css/user.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<!-- === SỬA ĐỔI: Thêm class="dashboard-page" === -->
 <body class="dashboard-page">
     <video autoplay muted loop id="background-video">
         <source src="/assets/videos/space-bg.mp4" type="video/mp4">
@@ -52,127 +51,66 @@
         function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
         function showNextTerminalMessage() { const messageEl = document.getElementById('terminal-message'); if (!messageEl) return; const messageToShow = terminalMessages[currentMessageIndex]; typeMessage(messageEl, messageToShow); currentMessageIndex = (currentMessageIndex + 1) % terminalMessages.length; }
 
-        // Trong file: dashboard.html
+        window.onload = async () => {
+            updateClock();
+            setInterval(updateClock, 1000);
+            showNextTerminalMessage();
+            setInterval(showNextTerminalMessage, 10000);
 
-window.onload = async () => {
-    updateClock();
-    setInterval(updateClock, 1000);
-    showNextTerminalMessage();
-    setInterval(showNextTerminalMessage, 10000);
-
-    const brandName = sessionStorage.getItem('selectedBrand');
-    
-    if (!brandName) {
-        alert("Lỗi: Vui lòng chọn một trang game.");
-        window.location.href = '/brand-selection.html';
-        return;
-    }
-    
-    document.getElementById('main-title-header').textContent = `SẢNH GAME CỦA ${brandName.toUpperCase()}`;
-
-    const username = localStorage.getItem('username');
-    if (!username) { window.location.href = '/'; return; }
-
-    const [userRes, lobbyRes] = await Promise.all([
-        fetch(`/api/user-info?username=${username}`),
-        fetch('/api/lobbies')
-    ]);
-    const userData = await userRes.json();
-    const lobbyData = await lobbyRes.json();
-
-    if (userData.success) {
-        document.getElementById('welcome-message').textContent = `Chào, ${userData.userInfo.username}!`;
-        document.getElementById('coin-display').textContent = `Token: ${userData.userInfo.coins}`;
-    }
-
-    const lobbyContainer = document.getElementById('lobby-container');
-    lobbyContainer.innerHTML = '';
-    if (lobbyData.success && lobbyData.lobbies.length > 0) {
-        lobbyData.lobbies.forEach(lobby => {
-            const card = document.createElement('a');
-            card.href = `/games.html?lobby_id=${lobby._id}&lobby_name=${encodeURIComponent(lobby.name)}`;
+            const brandName = sessionStorage.getItem('selectedBrand');
             
-            // === BẮT ĐẦU THAY ĐỔI CẤU TRÚC THẺ ===
-            card.className = 'game-card-enhanced dashboard-lobby-card'; // Dùng style của game-card
-            card.innerHTML = `
-                <div class="game-card-inner-frame">
-                    <div class="card-image-wrapper">
-                        <img src="${lobby.logo_url}" alt="${lobby.name}">
-                    </div>
-                </div>
-                <div class="game-card-content">
-                    <button class="action-button" style="background: linear-gradient(45deg, #d90429, #ef233c); margin-top: auto;">
-                        ${lobby.name}
-                    </button>
-                </div>`;
-            // === KẾT THÚC THAY ĐỔI CẤU TRÚC THẺ ===
-
-            lobbyContainer.appendChild(card);
-        });
-    } else {
-        lobbyContainer.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #fff;">Admin chưa tạo sảnh game.</p>`
-    }
-};// Trong file: dashboard.html
-
-window.onload = async () => {
-    updateClock();
-    setInterval(updateClock, 1000);
-    showNextTerminalMessage();
-    setInterval(showNextTerminalMessage, 10000);
-
-    const brandName = sessionStorage.getItem('selectedBrand');
-    
-    if (!brandName) {
-        alert("Lỗi: Vui lòng chọn một trang game.");
-        window.location.href = '/brand-selection.html';
-        return;
-    }
-    
-    document.getElementById('main-title-header').textContent = `SẢNH GAME CỦA ${brandName.toUpperCase()}`;
-
-    const username = localStorage.getItem('username');
-    if (!username) { window.location.href = '/'; return; }
-
-    const [userRes, lobbyRes] = await Promise.all([
-        fetch(`/api/user-info?username=${username}`),
-        fetch('/api/lobbies')
-    ]);
-    const userData = await userRes.json();
-    const lobbyData = await lobbyRes.json();
-
-    if (userData.success) {
-        document.getElementById('welcome-message').textContent = `Chào, ${userData.userInfo.username}!`;
-        document.getElementById('coin-display').textContent = `Token: ${userData.userInfo.coins}`;
-    }
-
-    const lobbyContainer = document.getElementById('lobby-container');
-    lobbyContainer.innerHTML = '';
-    if (lobbyData.success && lobbyData.lobbies.length > 0) {
-        lobbyData.lobbies.forEach(lobby => {
-            const card = document.createElement('a');
-            card.href = `/games.html?lobby_id=${lobby._id}&lobby_name=${encodeURIComponent(lobby.name)}`;
+            if (!brandName) {
+                alert("Lỗi: Vui lòng chọn một trang game.");
+                window.location.href = '/brand-selection.html';
+                return;
+            }
             
-            // === BẮT ĐẦU THAY ĐỔI CẤU TRÚC THẺ ===
-            card.className = 'game-card-enhanced dashboard-lobby-card'; // Dùng style của game-card
-            card.innerHTML = `
-                <div class="game-card-inner-frame">
-                    <div class="card-image-wrapper">
-                        <img src="${lobby.logo_url}" alt="${lobby.name}">
-                    </div>
-                </div>
-                <div class="game-card-content">
-                    <button class="action-button" style="background: linear-gradient(45deg, #d90429, #ef233c); margin-top: auto;">
-                        ${lobby.name}
-                    </button>
-                </div>`;
-            // === KẾT THÚC THAY ĐỔI CẤU TRÚC THẺ ===
+            document.getElementById('main-title-header').textContent = `SẢNH GAME CỦA ${brandName.toUpperCase()}`;
 
-            lobbyContainer.appendChild(card);
-        });
-    } else {
-        lobbyContainer.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #fff;">Admin chưa tạo sảnh game.</p>`
-    }
-};
+            const username = localStorage.getItem('username');
+            if (!username) { window.location.href = '/'; return; }
+
+            const [userRes, lobbyRes] = await Promise.all([
+                fetch(`/api/user-info?username=${username}`),
+                fetch('/api/lobbies')
+            ]);
+            const userData = await userRes.json();
+            const lobbyData = await lobbyRes.json();
+
+            if (userData.success) {
+                document.getElementById('welcome-message').textContent = `Chào, ${userData.userInfo.username}!`;
+                
+                // === THAY ĐỔI: Lấy và hiển thị Token theo thương hiệu ===
+                const userCoinsByBrand = userData.userInfo.coins_by_brand || {};
+                const coinsForCurrentBrand = userCoinsByBrand[brandName] || 0;
+                document.getElementById('coin-display').textContent = `Token: ${coinsForCurrentBrand}`;
+                // =======================================================
+            }
+
+            const lobbyContainer = document.getElementById('lobby-container');
+            lobbyContainer.innerHTML = '';
+            if (lobbyData.success && lobbyData.lobbies.length > 0) {
+                lobbyData.lobbies.forEach(lobby => {
+                    const card = document.createElement('a');
+                    card.href = `/games.html?lobby_id=${lobby._id}&lobby_name=${encodeURIComponent(lobby.name)}`;
+                    card.className = 'game-card-enhanced dashboard-lobby-card';
+                    card.innerHTML = `
+                        <div class="game-card-inner-frame">
+                            <div class="card-image-wrapper">
+                                <img src="${lobby.logo_url}" alt="${lobby.name}">
+                            </div>
+                        </div>
+                        <div class="game-card-content">
+                            <button class="action-button" style="background: linear-gradient(45deg, #d90429, #ef233c); margin-top: auto;">
+                                ${lobby.name}
+                            </button>
+                        </div>`;
+                    lobbyContainer.appendChild(card);
+                });
+            } else {
+                lobbyContainer.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #fff;">Admin chưa tạo sảnh game.</p>`
+            }
+        };
     </script>
 </body>
 </html>

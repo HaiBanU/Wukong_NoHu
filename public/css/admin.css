@@ -4,9 +4,9 @@
 
 /* 1. Nền và màu chữ chính */
 body.admin-page {
-    background-color: #f4f6f9; /* Một màu xám rất nhạt, dễ chịu hơn màu trắng tinh */
-    color: #212529; /* Màu chữ đen đậm */
-    overflow-y: auto; /* Cho phép cuộn trang admin nếu nội dung dài */
+    background-color: #f4f6f9;
+    color: #212529;
+    overflow-y: auto;
     font-family: 'Roboto', sans-serif;
 }
 
@@ -46,12 +46,8 @@ body.admin-page .logout-button:hover {
     background-color: #f1f1f1;
     border-color: #ccc;
 }
-body.admin-page .logout-button span {
-    color: #333;
-}
-body.admin-page .logout-button svg {
-    stroke: #333;
-}
+body.admin-page .logout-button span { color: #333; }
+body.admin-page .logout-button svg { stroke: #333; }
 
 /* 3. Layout và Tiêu đề */
 .admin-main-container,
@@ -92,16 +88,11 @@ body.admin-page h4 {
 .admin-menu-card .icon svg {
     width: 32px;
     height: 32px;
-    stroke: var(--primary-red); /* Giữ lại màu đỏ cho icon cho nổi bật */
+    stroke: var(--primary-red);
     margin-bottom: 15px;
 }
-.admin-menu-card h3 {
-    margin-bottom: 10px;
-}
-.admin-menu-card p {
-    color: #6c757d;
-    font-size: 0.9em;
-}
+.admin-menu-card h3 { margin-bottom: 10px; }
+.admin-menu-card p { color: #6c757d; font-size: 0.9em; }
 
 /* Grid layout */
 .grid-container {
@@ -119,7 +110,8 @@ body.admin-page h4 {
 }
 .search-bar,
 .coin-controls input,
-.form-group input {
+.form-group input,
+.form-control {
     width: 100%;
     padding: 12px;
     border-radius: 8px;
@@ -130,13 +122,13 @@ body.admin-page h4 {
 }
 .search-bar:focus,
 .coin-controls input:focus,
-.form-group input:focus {
+.form-group input:focus,
+.form-control:focus {
     outline: none;
     border-color: var(--primary-red);
     box-shadow: 0 0 0 3px rgba(217, 4, 41, 0.15);
 }
 
-/* Bảng quản lý User */
 .user-item {
     display: flex;
     justify-content: space-between;
@@ -144,17 +136,9 @@ body.admin-page h4 {
     padding: 15px;
     border-bottom: 1px solid #e9ecef;
 }
-.user-item:last-child {
-    border-bottom: none;
-}
-.coin-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.coin-controls input {
-    width: 100px;
-}
+.user-item:last-child { border-bottom: none; }
+.coin-controls { display: flex; align-items: center; gap: 10px; }
+.coin-controls input { width: 100px; }
 
 /* 6. Buttons */
 .btn-danger {
@@ -166,49 +150,8 @@ body.admin-page h4 {
     cursor: pointer;
     font-weight: 500;
 }
-.btn-danger:hover {
-    background: #c82333;
-}
+.btn-danger:hover { background: #c82333; }
 
-p[style*="var(--admin-text-subtle)"],
-p[style*="var(--text-light)"] {
-    color: #888 !important;
-}
-
-#modal-message {
-    margin-top: 15px;
-    font-weight: bold;
-    text-align: center;
-    height: 20px;
-}
-
-.admin-main-container h1 {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.admin-main-container .grid-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    grid-template-columns: none; 
-}
-
-.admin-menu-card {
-    border: none;
-    border-top: 4px solid var(--primary-red);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
-    max-width: 350px;
-    text-align: left;
-}
-
-.admin-menu-card:hover {
-    transform: translateY(-8px) scale(1.03);
-    box-shadow: 0 15px 30px rgba(217, 4, 41, 0.15);
-}
-
-/* === CSS MỚI CHO HIỂN THỊ TOKEN ADMIN === */
 .header-right-group {
     display: flex;
     align-items: center;
@@ -221,4 +164,123 @@ p[style*="var(--text-light)"] {
     background-color: #e9ecef;
     padding: 8px 15px;
     border-radius: 8px;
+}
+
+/* ======================================= */
+/* === BẮT ĐẦU: HIỆU ỨNG NÂNG CAO MỚI === */
+/* ======================================= */
+
+/* 1. Toast Notification Thiết Kế Mới */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: #2d3436;
+    color: #dfe6e9;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+    border: 1px solid #4b5457;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+.toast.hide {
+    transform: translateX(120%);
+    opacity: 0;
+}
+
+.toast-icon svg {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+.toast.success .toast-icon { color: #00b894; }
+.toast.error .toast-icon { color: #d63031; }
+
+.toast-message { font-weight: 500; }
+
+.toast::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    width: 100%;
+    animation: toast-progress 4s linear forwards;
+}
+.toast.success::after { background-color: #00b894; }
+.toast.error::after { background-color: #d63031; }
+
+@keyframes toast-progress {
+    from { width: 100%; }
+    to { width: 0%; }
+}
+
+/* 2. Alert Box trong Modal Thiết Kế Mới */
+.modal-alert {
+    padding: 12px 15px;
+    margin-top: 15px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+.modal-alert.show {
+    display: flex;
+}
+.modal-alert-success {
+    background-color: #e9f7ef;
+    border-color: #a1d9b4;
+    color: #2a6f44;
+}
+.modal-alert-error {
+    background-color: #fdecea;
+    border-color: #f8c0b3;
+    color: #9b2c14;
+}
+
+/* 3. Button Loading & Success State */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin-top: -10px;
+    margin-left: -10px;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.btn-success {
+    background: #28a745 !important;
 }

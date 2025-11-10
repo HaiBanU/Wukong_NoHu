@@ -29,7 +29,6 @@
 
 
 .analysis-main { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 10px 0; box-sizing: border-box; }
-/* === THAY ĐỔI 1: Tăng chiều cao tối đa của khung lên nhiều hơn === */
 .analysis-frame { width: 95%; max-width: 400px; height: 100%; max-height: 1050px; background: transparent; border: 2px solid var(--primary-red); box-shadow: 0 0 15px var(--primary-red), inset 0 0 15px var(--primary-red); padding: 0; animation: fadeIn 1s, glowing-border 4s infinite ease-in-out; }
 .analysis-frame-inner { width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
@@ -56,7 +55,14 @@
     gap: 0;
 }
 
-.analysis-top-bar { display: flex; justify-content: space-between; align-items: center; }
+/* === THAY ĐỔI: Chuyển sang Grid Layout để căn chỉnh 3 thành phần === */
+.analysis-top-bar {
+    display: grid;
+    grid-template-columns: auto 1fr auto; /* Cột trái và phải tự co, cột giữa lấp đầy */
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px; /* Khoảng cách giữa các thành phần */
+}
 
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @keyframes pulse-red-glow { 0%, 100% { box-shadow: 0 0 15px #ff0000, 0 0 5px #ff0000 inset; } 50% { box-shadow: 0 0 25px #ff0000, 0 0 10px #ff0000 inset; } }
@@ -85,10 +91,121 @@
 }
 
 
-.gif-placeholder { width: 160px; height: 60px; display: flex; justify-content: center; align-items: center; }
-.gif-placeholder img { max-width: 100%; max-height: 100%; object-fit: contain; }
+/* === THÊM MỚI: HIỆU ỨNG CẦU NỐI DỮ LIỆU === */
+.data-bridge {
+    position: relative;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-/* === THAY ĐỔI 2: Tăng padding để đẩy robot xuống thấp hơn nữa === */
+.bridge-icon {
+    width: 30px;
+    height: 30px;
+    color: var(--primary-red);
+    filter: drop-shadow(0 0 8px var(--primary-red));
+    animation: pulse-icon 2s infinite ease-in-out;
+    z-index: 2;
+}
+
+.bridge-icon svg {
+    width: 100%;
+    height: 100%;
+    animation: spin 8s linear infinite reverse;
+}
+
+@keyframes pulse-icon {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px var(--primary-red)); }
+    50% { transform: scale(1.1); filter: drop-shadow(0 0 15px var(--primary-red)); }
+}
+
+.bridge-line {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(217, 4, 41, 0.2);
+    overflow: hidden;
+}
+
+.bridge-line::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, var(--primary-red), #ffd700);
+    animation: flow-line 2s linear infinite;
+}
+
+.bridge-line.line-1 {
+    transform: translateY(-10px);
+}
+.bridge-line.line-2 {
+    transform: translateY(10px);
+    animation-delay: -0.5s;
+}
+ .bridge-line.line-3 {
+    height: 1px;
+    background: rgba(255, 215, 0, 0.3);
+    animation-delay: -1s;
+}
+.bridge-line.line-3::before {
+    animation-duration: 1.5s;
+}
+
+@keyframes flow-line {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+
+@keyframes led-border-spin {
+    100% { transform: rotate(360deg); }
+}
+
+.gif-frame {
+    position: relative;
+    width: 160px;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #000; 
+}
+
+.gif-frame::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        transparent,
+        transparent,
+        transparent,
+        var(--primary-red),
+        transparent
+    );
+    animation: led-border-spin 2.5s linear infinite;
+}
+
+.gif-frame-inner {
+    position: relative;
+    inset: 3px;
+    background: #000;
+    border-radius: 8px;
+    z-index: 2;
+}
+
+.gif-frame-inner img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+}
+
 .analysis-main-visual { 
     display: flex; 
     justify-content: center; 
@@ -97,7 +214,6 @@
     overflow: hidden;
     padding: 30px 0;
 }
-/* === THAY ĐỔI 3: Tăng kích thước robot lên đáng kể === */
 #robot-image { width: 65%; max-width: 220px; animation: bot-float 3s infinite ease-in-out; z-index: 2; flex-shrink: 0; }
 .result-wrapper { text-align: center; animation: fadeIn 0.5s; z-index: 10; position: relative; }
 .result-wrapper .result-text { font-size: 1.8em; font-weight: bold; color: #00ffaa; margin-top: 15px; text-shadow: 0 0 10px #00ffaa; }
@@ -181,16 +297,14 @@
 
 .analysis-footer { padding: 15px; padding-top: 0; }
 
-/* === HIỆU ỨNG NÚT BẮT ĐẦU PHÂN TÍCH MỚI === */
 #analyze-button {
     width: 100%;
     padding: 15px;
     font-size: 1.2em;
-    position: relative; /* Cần thiết cho pseudo-element */
-    overflow: hidden; /* Ẩn các phần thừa của hiệu ứng */
+    position: relative;
+    overflow: hidden;
     z-index: 1;
-    border-radius: 12px; /* Bo tròn hơn một chút */
-    /* Ghi đè lại animation mặc định và thêm hiệu ứng pulse */
+    border-radius: 12px;
     animation: button-pulse 2s infinite ease-in-out; 
     background: linear-gradient(45deg, #a40606, var(--primary-red));
 }
@@ -201,12 +315,11 @@
     100% { box-shadow: 0 0 10px rgba(217, 4, 41, 0.5); }
 }
 
-/* Hiệu ứng quét sáng */
 #analyze-button::after {
     content: '';
     position: absolute;
     top: 0;
-    left: -150%; /* Bắt đầu từ bên ngoài */
+    left: -150%;
     width: 100%;
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
@@ -214,18 +327,15 @@
     transition: 0s;
 }
 
-/* Kích hoạt hiệu ứng quét khi hover */
 #analyze-button:hover::after {
-    left: 150%; /* Di chuyển sang phía bên kia */
-    transition: 0.8s ease; /* Thời gian quét */
+    left: 150%;
+    transition: 0.8s ease;
 }
 
-/* Ghi đè lại hiệu ứng hover mặc định */
 #analyze-button:hover {
     transform: translateY(-3px);
-    /* Tăng cường bóng đổ khi hover để nó nổi bật hơn pulse */
     box-shadow: 0 0 30px rgba(217, 4, 41, 1);
-    animation-play-state: paused; /* Tạm dừng pulse khi hover */
+    animation-play-state: paused;
 }
 
 #game-name-display-bottom { 
@@ -250,7 +360,6 @@
     animation: marquee-scroll 8s linear infinite, animated-text-gradient 3s linear infinite; 
 }
 
-/* THANH TIẾN TRÌNH PHÂN TÍCH MỚI */
 #analysis-progress-container { width: 100%; text-align: center; padding: 10px 0; }
 .progress-status-text { color: #ffd700; font-size: 0.9em; margin-bottom: 10px; text-shadow: 0 0 5px #ffd700; height: 30px; line-height: 1.5; }
 .progress-bar-wrapper { width: 100%; height: 30px; background-color: #000; border: 2px solid var(--primary-red); border-radius: 8px; position: relative; overflow: hidden; box-shadow: 0 0 15px rgba(217, 4, 41, 0.5) inset; }
@@ -259,7 +368,6 @@
 @keyframes progress-scan { from { background-position: 0 0; } to { background-position: 50px 0; } }
 .progress-bar-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-weight: bold; text-shadow: 0 0 5px #000; }
 
-/* HIỆU ỨNG KHI PHÂN TÍCH */
 #frame-wide-effects, #frame-wide-lightning { transition: opacity 0.5s ease-in-out; opacity: 0.3; }
 .analyzing #frame-wide-effects, .analyzing #frame-wide-lightning { animation-play-state: running !important; opacity: 1 !important; }
 .led-info-box.result-reveal { animation: result-pop-in 0.5s ease-out forwards; }

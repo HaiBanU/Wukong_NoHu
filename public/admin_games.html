@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
 <body class="admin-page">
+    <div id="toast-container"></div>
+
     <header class="header fadeIn">
         <a href="/admin.html" class="back-button">&larr; Quay lại Menu</a>
         <div class="header-right-group">
@@ -27,10 +29,7 @@
                 <button class="btn-primary" style="width: auto; padding: 12px 20px;" onclick="openAddLobbyModal()">Tạo Sảnh Mới</button>
             </div>
         </div>
-        <p id="message" style="text-align: right; height: 20px; margin-top: 10px;"></p>
-        
-        <div id="lobby-container" class="grid-container" style="margin-top: 20px; cursor: grab;">
-        </div>
+        <div id="lobby-container" class="grid-container" style="margin-top: 20px; cursor: grab;"></div>
     </main>
 
     <div id="addLobbyModal" class="modal">
@@ -38,15 +37,14 @@
             <span class="close-btn" onclick="closeModals()">&times;</span>
             <h2>Tạo Sảnh Game Mới</h2>
             <form id="add-lobby-form">
-                <div class="form-group">
-                    <input type="text" name="name" placeholder="Tên Sảnh" required>
-                </div>
+                <div class="form-group"><input type="text" name="name" placeholder="Tên Sảnh" required></div>
                 <div class="form-group">
                     <label>Logo Sảnh (Khuyến khích ảnh GIF)</label>
                     <input type="file" name="logo" accept="image/gif, image/jpeg, image/png" required>
                 </div>
                 <button type="submit" class="btn-primary">Tạo Sảnh</button>
             </form>
+             <div id="modal-message" class="modal-alert"></div>
         </div>
     </div>
     
@@ -55,18 +53,38 @@
         const addLobbyModal = document.getElementById('addLobbyModal');
         const addLobbyForm = document.getElementById('add-lobby-form');
         const saveOrderBtn = document.getElementById('save-order-btn');
-        const messageEl = document.getElementById('message');
+        const modalMessageEl = document.getElementById('modal-message');
         let sortableInstance = null;
 
-        function openAddLobbyModal() { addLobbyModal.style.display = 'flex'; }
-        function closeModals() { addLobbyModal.style.display = 'none'; }
-        
-        function showMessage(msg, isSuccess) {
-            messageEl.textContent = msg;
-            messageEl.className = isSuccess ? 'success' : 'error';
-            setTimeout(() => { messageEl.textContent = ''; }, 3000);
+        function showToast(message, isSuccess = true) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isSuccess ? 'success' : 'error'}`;
+            const iconSVG = isSuccess 
+                ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>`
+                : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm4.3 14.3a.996.996 0 01-1.41 0L12 13.41l-2.89 2.89a.996.996 0 11-1.41-1.41L10.59 12 7.7 9.11a.996.996 0 111.41-1.41L12 10.59l2.89-2.89a.996.996 0 111.41 1.41L13.41 12l2.89 2.89c.38.38.38 1.02 0 1.41z"></path></svg>`;
+            toast.innerHTML = `<span class="toast-icon">${iconSVG}</span><span class="toast-message">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.add('hide');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 4000);
         }
 
+        function showModalMessage(message, isSuccess) {
+            modalMessageEl.classList.remove('show', 'modal-alert-success', 'modal-alert-error');
+            if (!message) return;
+            modalMessageEl.textContent = message;
+            modalMessageEl.classList.add('show', isSuccess ? 'modal-alert-success' : 'modal-alert-error');
+        }
+
+        function openAddLobbyModal() { 
+            showModalMessage('', true);
+            addLobbyModal.style.display = 'flex'; 
+        }
+        function closeModals() { addLobbyModal.style.display = 'none'; }
+        
         async function fetchAndDisplayLobbies() {
             const response = await fetch('/api/lobbies');
             const data = await response.json();
@@ -76,59 +94,69 @@
                     const cardLink = document.createElement('a');
                     cardLink.href = `/admin_manage_lobby.html?id=${lobby._id}&name=${encodeURIComponent(lobby.name)}`;
                     cardLink.className = 'card';
-                    cardLink.style.textDecoration = 'none'; 
-                    cardLink.style.color = 'inherit';
                     cardLink.dataset.id = lobby._id;
-
                     cardLink.innerHTML = `
                         <h3>${lobby.name}</h3>
                         <img src="${lobby.logo_url}" style="width: 100px; height: 50px; object-fit: contain;">
-                        <p style="margin-top: 10px; font-size: 0.8em; color: var(--admin-text-subtle);">Nhấn để quản lý game</p>
+                        <p style="margin-top: 10px; font-size: 0.8em; color: #888;">Nhấn để quản lý game</p>
                     `;
                     lobbyContainer.appendChild(cardLink);
                 });
-                
                 if (!sortableInstance) {
                     sortableInstance = new Sortable(lobbyContainer, {
                         animation: 150,
                         ghostClass: 'sortable-ghost',
-                        onEnd: function() {
-                            saveOrderBtn.style.display = 'inline-block';
-                        }
+                        onEnd: function() { saveOrderBtn.style.display = 'inline-block'; }
                     });
                 }
-
             } else {
-                 lobbyContainer.innerHTML = `<p style="text-align:center; color: var(--admin-text-subtle); grid-column: 1 / -1;">Chưa có sảnh nào. Hãy nhấn "Tạo Sảnh Mới".</p>`
+                 lobbyContainer.innerHTML = `<p style="text-align:center; color: #888; grid-column: 1 / -1;">Chưa có sảnh nào.</p>`
             }
         }
 
         addLobbyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const button = e.target.querySelector('button[type="submit"]');
+            button.classList.add('btn-loading');
+            showModalMessage('', true);
             const formData = new FormData(addLobbyForm);
-            await fetch('/api/add-lobby', { method: 'POST', body: formData });
-            addLobbyForm.reset();
-            closeModals();
-            fetchAndDisplayLobbies();
+            try {
+                const response = await fetch('/api/add-lobby', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.success) {
+                    showToast(result.message, true);
+                    addLobbyForm.reset();
+                    closeModals();
+                    fetchAndDisplayLobbies();
+                } else {
+                    showModalMessage(result.message, false);
+                }
+            } catch (error) {
+                showModalMessage('Lỗi kết nối máy chủ!', false);
+            } finally {
+                button.classList.remove('btn-loading');
+            }
         });
         
         saveOrderBtn.addEventListener('click', async () => {
             if (!sortableInstance) return;
             const orderedIds = sortableInstance.toArray();
-            saveOrderBtn.textContent = 'Đang lưu...';
-            saveOrderBtn.disabled = true;
-
-            const response = await fetch('/api/update-lobby-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderedIds })
-            });
-            const result = await response.json();
-            showMessage(result.message, result.success);
-            saveOrderBtn.textContent = 'Lưu Thứ Tự';
-            saveOrderBtn.disabled = false;
-            if (result.success) {
-                saveOrderBtn.style.display = 'none';
+            saveOrderBtn.classList.add('btn-loading');
+            try {
+                const response = await fetch('/api/update-lobby-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderedIds })
+                });
+                const result = await response.json();
+                showToast(result.message, result.success);
+                if (result.success) {
+                    saveOrderBtn.style.display = 'none';
+                }
+            } catch (error) {
+                showToast('Lỗi kết nối máy chủ!', false);
+            } finally {
+                saveOrderBtn.classList.remove('btn-loading');
             }
         });
         
@@ -143,8 +171,7 @@
             if (localStorage.getItem('isSuperAdmin') === 'true' || !coinDisplay) {
                 if(coinDisplay) coinDisplay.style.display = 'none';
                 return;
-            };
-
+            }
             const response = await fetch(`/api/user-info?username=${username}`);
             const data = await response.json();
             if (data.success) {
@@ -152,16 +179,8 @@
             }
         }
 
-        window.onclick = (event) => {
-            if (event.target == addLobbyModal) {
-                closeModals();
-            }
-        }
-        
-        window.onload = () => {
-            fetchAndDisplayLobbies();
-            fetchAdminInfo();
-        };
+        window.onclick = (event) => { if (event.target == addLobbyModal) closeModals(); }
+        window.onload = () => { fetchAndDisplayLobbies(); fetchAdminInfo(); };
     </script>
 </body>
 </html>
