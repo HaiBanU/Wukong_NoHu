@@ -14,6 +14,27 @@
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .btn-danger { background: #dc3545; color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
         #modal-message { margin-top: 15px; font-weight: bold; text-align: center; height: 20px; }
+        /* === THÊM MỚI: CSS cho tag thương hiệu === */
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .admin-brand-tag {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            background-color: #fff;
+        }
     </style>
 </head>
 <body class="admin-page">
@@ -41,6 +62,12 @@
             <form id="create-admin-form">
                 <div class="form-group"><input type="text" id="new-admin-username" placeholder="Tên đăng nhập" required></div>
                 <div class="form-group"><input type="password" id="new-admin-password" placeholder="Mật khẩu" required></div>
+                <!-- === THÊM MỚI: Dropdown chọn thương hiệu === -->
+                <div class="form-group">
+                    <select id="new-admin-brand" class="form-control" required>
+                        <option value="">-- Chọn thương hiệu quản lý --</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn-primary">Tạo Tài Khoản</button>
             </form>
             <p id="modal-message"></p>
@@ -75,6 +102,25 @@
             showModalMessage('', true);
         }
 
+        // THÊM MỚI: Hàm để tải danh sách thương hiệu vào dropdown
+        async function loadBrandsIntoSelect() {
+            try {
+                const response = await fetch('/api/brands');
+                const data = await response.json();
+                const selectEl = document.getElementById('new-admin-brand');
+                if (data.success) {
+                    data.brands.forEach(brand => {
+                        const option = document.createElement('option');
+                        option.value = brand.name;
+                        option.textContent = brand.name;
+                        selectEl.appendChild(option);
+                    });
+                }
+            } catch(e) {
+                console.error("Lỗi khi tải thương hiệu:", e);
+            }
+        }
+
         async function fetchAndDisplayAdmins() {
             const response = await fetch('/api/sub-admins');
             const data = await response.json();
@@ -83,8 +129,12 @@
                 data.admins.forEach(admin => {
                     const item = document.createElement('div');
                     item.className = 'admin-item';
+                    // THAY ĐỔI: Hiển thị tên và thương hiệu được gán
                     item.innerHTML = `
-                        <span>${admin.username} (Token: ${admin.coins})</span>
+                        <div class="admin-info">
+                            <span>${admin.username} (Token: ${admin.coins})</span>
+                            <span class="admin-brand-tag">${admin.assigned_brand || 'Chưa gán'}</span>
+                        </div>
                         <div class="coin-controls">
                             <input type="number" min="1" placeholder="Số Token cấp" id="coins-for-${admin._id}">
                             <button class="btn-primary" onclick="grantCoins('${admin._id}')">Cấp</button>
@@ -103,11 +153,14 @@
             showModalMessage('Đang xử lý...', true);
             const username = document.getElementById('new-admin-username').value;
             const password = document.getElementById('new-admin-password').value;
+            // THÊM MỚI: Lấy giá trị thương hiệu từ dropdown
+            const brandName = document.getElementById('new-admin-brand').value;
             
             const response = await fetch('/api/create-sub-admin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+                // THAY ĐỔI: Gửi cả brandName đi
+                body: JSON.stringify({ username, password, brandName })
             });
             const result = await response.json();
             
@@ -153,7 +206,10 @@
             }
         }
 
-        window.onload = fetchAndDisplayAdmins;
+        window.onload = () => {
+            fetchAndDisplayAdmins();
+            loadBrandsIntoSelect(); // Gọi hàm tải thương hiệu
+        };
         window.onclick = (event) => {
             if (event.target == createAdminModal) {
                 closeModal();

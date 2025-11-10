@@ -10,14 +10,34 @@
         .user-item { display: grid; grid-template-columns: 1fr auto auto; gap: 15px; align-items: center; padding: 15px 20px; }
         .user-item:not(:last-child) { border-bottom: 1px solid #e9ecef; }
         .user-name { font-weight: bold; color: #333; }
-        #manageTokensModal .modal-content { max-width: 600px; }
+        #manageTokensModal .modal-content { max-width: 500px; } /* Thu nhỏ modal */
         #modal-title { font-size: 1.5em; margin-bottom: 20px; color: var(--primary-red); }
-        .modal-brand-list { max-height: 60vh; overflow-y: auto; padding-right: 10px; }
-        .modal-brand-item { display: grid; grid-template-columns: 1fr 120px auto; gap: 15px; align-items: center; padding: 12px 0; }
-        .modal-brand-item:not(:last-child) { border-bottom: 1px solid #f1f1f1; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .search-bar { width: 50%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
         .btn-danger { background: #dc3545; color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+
+        /* === THÊM CSS cho modal mới === */
+        #single-token-updater {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            padding: 20px 0;
+        }
+        #single-token-updater .form-control {
+            max-width: 200px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        #single-token-updater button {
+            width: auto;
+            padding: 10px 30px;
+        }
+         #single-token-updater p {
+            margin: 0;
+            font-size: 1.1em;
+            color: #333;
+         }
     </style>
 </head>
 <body class="admin-page">
@@ -35,7 +55,7 @@
     </header>
 
     <main class="fadeIn" style="animation-delay: 0.2s;">
-        <h2 style="margin-top:0;">Quản Lý Người Dùng</h2>
+        <h2 id="main-title" style="margin-top:0;">Quản Lý Người Dùng</h2>
         <div class="page-header">
             <input type="text" id="user-search-input" class="search-bar" placeholder="Tìm kiếm user...">
             <button class="btn-primary" style="width: auto; padding: 12px 20px;" onclick="openLinkUserModal()">+ Thêm Tài Khoản</button>
@@ -59,7 +79,10 @@
         <div class="modal-content fadeIn">
             <span class="close-btn" onclick="closeAllModals()">&times;</span>
             <h2 id="modal-title">Quản lý Token</h2>
-            <div id="modal-brand-list" class="modal-brand-list"></div>
+            <!-- === THAY ĐỔI LỚN: Bỏ danh sách thương hiệu, thay bằng 1 form duy nhất === -->
+            <div id="single-token-updater">
+                <!-- Nội dung sẽ được JS chèn vào đây -->
+            </div>
         </div>
     </div>
     
@@ -70,7 +93,8 @@
         const userSearchInput = document.getElementById('user-search-input');
         const linkUserForm = document.getElementById('link-user-form');
         const manageTokensModal = document.getElementById('manageTokensModal');
-        let currentUsers = [], gameBrands = [];
+        let currentUsers = [];
+        let adminAssignedBrand = null; // Biến mới để lưu thương hiệu của admin
 
         function showToast(message, isSuccess = true) {
             const container = document.getElementById('toast-container');
@@ -110,28 +134,30 @@
         }
 
         function openLinkUserModal() { 
-            showModalMessage('', true); // Clear message
+            showModalMessage('', true);
             linkUserModal.style.display = 'flex'; 
         }
         
+        // === THAY ĐỔI LỚN: Hàm mở Modal quản lý Token ===
         function openManageModal(userId) {
             const user = currentUsers.find(u => u._id === userId);
             if (!user) return;
-            document.getElementById('modal-title').textContent = `Quản lý Token cho: ${user.username}`;
-            const brandListContainer = document.getElementById('modal-brand-list');
-            brandListContainer.innerHTML = ''; 
-            gameBrands.forEach(brand => {
-                const userCoinsByBrand = user.coins_by_brand || {};
-                const currentCoins = userCoinsByBrand[brand.name] || 0;
-                const item = document.createElement('div');
-                item.className = 'modal-brand-item';
-                item.innerHTML = `
-                    <span class="brand-name">${brand.name}</span>
-                    <input type="number" class="form-control" min="0" value="${currentCoins}" id="modal-coins-for-${user._id}-${brand.name}">
-                    <button class="btn-primary" style="padding: 8px 15px; font-size: 0.9em;" onclick="updateCoins(event, '${user._id}', '${brand.name}')">Lưu</button>
-                `;
-                brandListContainer.appendChild(item);
-            });
+
+            if (!adminAssignedBrand && localStorage.getItem('isSuperAdmin') !== 'true') {
+                showToast("Tài khoản của bạn chưa được gán thương hiệu. Vui lòng liên hệ Super Admin.", false);
+                return;
+            }
+            document.getElementById('modal-title').textContent = `Cấp Token cho: ${user.username}`;
+            const updaterContainer = document.getElementById('single-token-updater');
+            
+            const userCoinsByBrand = user.coins_by_brand || {};
+            const currentCoins = userCoinsByBrand[adminAssignedBrand] || 0;
+
+            updaterContainer.innerHTML = `
+                <p>Thương hiệu quản lý: <strong>${adminAssignedBrand}</strong></p>
+                <input type="number" class="form-control" min="0" value="${currentCoins}" id="modal-coins-input">
+                <button class="btn-primary" onclick="updateCoins(event, '${user._id}')">Lưu & Cấp Token</button>
+            `;
             manageTokensModal.style.display = 'flex';
         }
 
@@ -139,19 +165,33 @@
             linkUserModal.style.display = 'none';
             manageTokensModal.style.display = 'none';
             linkUserForm.reset();
-            showModalMessage('', true); // Clear message
+            showModalMessage('', true);
         }
 
         async function initializePage() {
             const adminId = localStorage.getItem('adminId');
-            if (!adminId) {
+            const username = localStorage.getItem('username');
+            const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true';
+
+            if (!adminId || !username) {
                 alert("Lỗi xác thực Admin. Vui lòng đăng nhập lại.");
                 window.location.href = '/';
                 return;
             }
-            const [brandRes, userRes] = await Promise.all([ fetch('/api/brands'), fetch(`/api/users?admin_id=${adminId}`) ]);
-            const brandData = await brandRes.json();
-            if (brandData.success) gameBrands = brandData.brands;
+            
+            if (!isSuperAdmin) {
+                const adminInfoRes = await fetch(`/api/user-info?username=${username}`);
+                const adminInfoData = await adminInfoRes.json();
+                if (adminInfoData.success) {
+                    adminAssignedBrand = adminInfoData.userInfo.assigned_brand;
+                    document.getElementById('main-title').textContent = `Quản lý User - Thương hiệu: ${adminAssignedBrand || 'Chưa gán'}`;
+                } else {
+                    alert("Không thể lấy thông tin Admin.");
+                    return;
+                }
+            }
+
+            const userRes = await fetch(`/api/users?admin_id=${adminId}`);
             const userData = await userRes.json();
             if (userData.success) {
                 currentUsers = userData.users;
@@ -217,27 +257,29 @@
             }
         });
 
-        async function updateCoins(event, userId, brandName) {
+        // === THAY ĐỔI LỚN: Hàm cập nhật Token ===
+        async function updateCoins(event, userId) {
             const button = event.target;
             button.classList.add('btn-loading');
-            const inputId = `modal-coins-for-${userId}-${brandName}`;
-            const coinInput = document.getElementById(inputId);
+            
+            const coinInput = document.getElementById('modal-coins-input');
             const adminId = localStorage.getItem('adminId');
             try {
                 const response = await fetch('/api/update-coins', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId, coins: coinInput.value, adminId, brandName })
+                    body: JSON.stringify({ userId, coins: coinInput.value, adminId })
                 });
                 const result = await response.json();
                 showToast(result.message, result.success);
+                
                 if (result.success) {
                     button.classList.add('btn-success');
                     fetchAdminInfo();
                     const user = currentUsers.find(u => u._id === userId);
                     if(user) {
                         if (!user.coins_by_brand) user.coins_by_brand = {};
-                        user.coins_by_brand[brandName] = parseInt(coinInput.value, 10);
+                        user.coins_by_brand[adminAssignedBrand] = parseInt(coinInput.value, 10);
                     }
                 }
             } catch (error) {

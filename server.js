@@ -15,7 +15,6 @@ const port = 3000;
 let lobbyRatesCache = {};
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
-// === THÊM MỚI: Danh sách thương hiệu tập trung tại backend ===
 const gameBrands = [ { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' } ];
 
 app.use(bodyParser.json());
@@ -48,15 +47,14 @@ mongoose.connect(process.env.MONGODB_URI)
         console.error('Could not connect to MongoDB...', err)
     });
 
-// === THAY ĐỔI LỚN: Cấu trúc lưu trữ Token của User ===
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
-    coins: { type: Number, default: 0 }, // Giữ lại cho Admin
+    coins: { type: Number, default: 0 },
     is_admin: { type: Boolean, default: false },
     is_super_admin: { type: Boolean, default: false },
     managed_by_admin_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
-    // Cấu trúc mới: Lưu Token theo từng thương hiệu
+    assigned_brand: { type: String, default: null },
     coins_by_brand: {
         type: Map,
         of: Number,
@@ -102,7 +100,6 @@ async function createSuperAdmin() {
 
 // --- PHẦN 3: CÁC API ENDPOINTS ---
 
-// API Đăng ký
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -117,7 +114,6 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// API Đăng nhập
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -140,17 +136,14 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// === THÊM MỚI: API lấy danh sách thương hiệu ===
 app.get('/api/brands', (req, res) => {
     res.json({ success: true, brands: gameBrands });
 });
 
-// === THAY ĐỔI: API lấy người dùng trả về cấu trúc Token mới ===
 app.get('/api/users', async (req, res) => {
     try {
         const { admin_id } = req.query;
         if (!admin_id) return res.status(400).json({ success: false, message: "Thiếu thông tin admin." });
-        // Lấy cả coins_by_brand
         const users = await User.find({ managed_by_admin_id: admin_id }).select('_id username coins_by_brand');
         res.json({ success: true, users });
     } catch (error) {
@@ -158,7 +151,6 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-// API gán user cho admin
 app.post('/api/link-user', async (req, res) => {
     try {
         const { adminId, username } = req.body;
@@ -168,12 +160,11 @@ app.post('/api/link-user', async (req, res) => {
         if (user.managed_by_admin_id) return res.status(409).json({ success: false, message: `Tài khoản "${username}" đã được quản lý bởi một admin khác.` });
         await User.updateOne({ _id: user._id }, { $set: { managed_by_admin_id: adminId } });
         res.json({ success: true, message: `Thêm tài khoản "${username}" thành công!` });
-    } catch (error) {
+    } catch (error) { // SỬA LỖI Ở ĐÂY
         res.status(500).json({ success: false, message: "Lỗi server khi cập nhật." });
     }
 });
 
-// API xóa user
 app.post('/api/delete-user', async (req, res) => {
     try {
         const { userId, adminId } = req.body;
@@ -186,12 +177,10 @@ app.post('/api/delete-user', async (req, res) => {
     }
 });
 
-
-// === THAY ĐỔI LỚN: Logic cập nhật Token theo từng thương hiệu ===
 app.post('/api/update-coins', async (req, res) => {
     try {
-        const { userId, coins, adminId, brandName } = req.body;
-        if (!adminId || !brandName) return res.status(400).json({ success: false, message: "Thiếu thông tin Admin hoặc Thương hiệu." });
+        const { userId, coins, adminId } = req.body;
+        if (!adminId) return res.status(400).json({ success: false, message: "Thiếu thông tin Admin." });
 
         const numCoins = parseInt(coins, 10);
         if (isNaN(numCoins) || numCoins < 0) return res.status(400).json({ success: false, message: "Số Token không hợp lệ." });
@@ -201,19 +190,17 @@ app.post('/api/update-coins', async (req, res) => {
 
         if (!admin || !user) return res.status(404).json({ success: false, message: "Không tìm thấy Admin hoặc User." });
         
-        // Tính tổng số token cũ của user trên tất cả các thương hiệu
-        const oldTotalUserCoins = Array.from(user.coins_by_brand.values()).reduce((sum, val) => sum + val, 0);
+        const brandName = admin.assigned_brand;
         
-        // Lấy số token cũ của user cho thương hiệu đang được cập nhật
-        const oldCoinsForBrand = user.coins_by_brand.get(brandName) || 0;
+        if (!admin.is_super_admin && !brandName) {
+            return res.status(403).json({ success: false, message: "Tài khoản Admin này chưa được gán cho thương hiệu nào." });
+        }
 
-        // Tính tổng số token mới của user
+        const oldTotalUserCoins = Array.from(user.coins_by_brand.values()).reduce((sum, val) => sum + val, 0);
+        const oldCoinsForBrand = user.coins_by_brand.get(brandName) || 0;
         const newTotalUserCoins = oldTotalUserCoins - oldCoinsForBrand + numCoins;
-        
-        // Tính chênh lệch
         const coinDifference = newTotalUserCoins - oldTotalUserCoins;
 
-        // Nếu admin không phải super admin, thì kiểm tra và trừ tiền
         if (!admin.is_super_admin) {
             if (admin.coins < coinDifference) {
                 return res.status(400).json({ success: false, message: `Không đủ Token. Bạn chỉ còn ${admin.coins} Token để cấp.` });
@@ -222,25 +209,21 @@ app.post('/api/update-coins', async (req, res) => {
             await admin.save();
         }
         
-        // Cập nhật số token cho thương hiệu cụ thể
         user.coins_by_brand.set(brandName, numCoins);
-        // Cần dòng này để Mongoose nhận biết sự thay đổi trong Map
         user.markModified('coins_by_brand'); 
         await user.save();
         
         res.json({ success: true, message: `Cập nhật ${numCoins} Token cho thương hiệu ${brandName} thành công!` });
 
-    } catch (error) {
+    } catch (error) { // SỬA LỖI Ở ĐÂY
         console.error("Update coins error:", error);
         res.status(500).json({ success: false, message: "Lỗi server khi cập nhật Token." });
     }
 });
 
-
-// === Quản lý Admin phụ (Không thay đổi) ===
 app.get('/api/sub-admins', async (req, res) => {
     try {
-        const subAdmins = await User.find({ is_admin: true, is_super_admin: false }).select('_id username coins');
+        const subAdmins = await User.find({ is_admin: true, is_super_admin: false }).select('_id username coins assigned_brand');
         res.json({ success: true, admins: subAdmins });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server khi lấy danh sách admin." });
@@ -249,8 +232,8 @@ app.get('/api/sub-admins', async (req, res) => {
 
 app.post('/api/create-sub-admin', async (req, res) => {
     try {
-        const { username, password } = req.body;
-        if (!username || !password) return res.status(400).json({ success: false, message: 'Tên đăng nhập và mật khẩu không được để trống' });
+        const { username, password, brandName } = req.body;
+        if (!username || !password || !brandName) return res.status(400).json({ success: false, message: 'Tên đăng nhập, mật khẩu và thương hiệu không được để trống' });
 
         const existingUser = await User.findOne({ username });
         if (existingUser) return res.status(409).json({ success: false, message: 'Tên đăng nhập đã tồn tại' });
@@ -260,10 +243,11 @@ app.post('/api/create-sub-admin', async (req, res) => {
             username,
             password: hashedPassword,
             is_admin: true,
-            is_super_admin: false
+            is_super_admin: false,
+            assigned_brand: brandName
         }).save();
         
-        res.json({ success: true, message: `Tạo tài khoản Admin '${username}' thành công!` });
+        res.json({ success: true, message: `Tạo tài khoản Admin '${username}' cho thương hiệu ${brandName} thành công!` });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi server khi tạo tài khoản' });
     }
@@ -310,8 +294,6 @@ app.post('/api/delete-sub-admin', async (req, res) => {
     }
 });
 
-
-// === Các API quản lý game (Không thay đổi) ===
 app.post('/api/add-lobby', upload.single('logo'), async (req, res) => {
     try {
         const { name } = req.body;
@@ -339,12 +321,10 @@ app.post('/api/add-game', upload.single('image'), async (req, res) => {
     }
 });
 
-// === THAY ĐỔI: API lấy thông tin user trả về cấu trúc Token mới ===
 app.get('/api/user-info', async (req, res) => {
     try {
         const { username } = req.query;
-        // Lấy cả coins cho admin và coins_by_brand cho user
-        const userInfo = await User.findOne({ username }).select('username coins coins_by_brand');
+        const userInfo = await User.findOne({ username }).select('username coins coins_by_brand assigned_brand');
         if (!userInfo) return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
         res.json({ success: true, userInfo });
     } catch (error) {
@@ -432,10 +412,9 @@ app.post('/api/delete-game', async (req, res) => {
     }
 });
 
-// === THAY ĐỔI: API phân tích game trừ tiền theo thương hiệu ===
 app.post('/api/analyze-game', async (req, res) => {
     try {
-        const { username, winRate, brandName } = req.body; // Thêm brandName
+        const { username, winRate, brandName } = req.body;
         if (!username || !winRate || !brandName) return res.status(400).json({ success: false, message: "Thiếu thông tin để phân tích." });
         
         const ANALYSIS_COST = 4;
@@ -462,8 +441,6 @@ app.post('/api/analyze-game', async (req, res) => {
     }
 });
 
-
-// --- PHẦN 4: KHỞI ĐỘNG SERVER ---
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
