@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HACK SLOT</title>
+    <title>Wukong Slot</title> <!-- Đã sửa -->
+    <link rel="icon" type="image/png" href="/assets/images/favicon.png"> <!-- Đã thêm -->
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/login.css">
 </head>
@@ -41,6 +42,29 @@
         </div>
     </div>
     <script>
+        // === BẮT ĐẦU: ĐOẠN MÃ TỰ ĐỘNG KIỂM TRA ĐĂNG NHẬP ===
+        // Chức năng: Tự động chuyển hướng người dùng nếu họ đã đăng nhập từ trước.
+        (function kiemTraDangNhap() {
+            // Lấy thông tin đăng nhập đã lưu từ lần trước
+            const daDangNhap = localStorage.getItem('username');
+            const laAdmin = localStorage.getItem('adminId');
+
+            // Nếu có thông tin người dùng đã đăng nhập...
+            if (daDangNhap) {
+                // ...thì kiểm tra xem có phải là admin không
+                if (laAdmin) {
+                    // Nếu là admin, chuyển thẳng đến trang quản trị
+                    window.location.href = '/admin.html';
+                } else {
+                    // Nếu là người dùng thường, chuyển thẳng đến trang chọn thương hiệu
+                    window.location.href = '/brand-selection.html';
+                }
+            }
+            // Nếu không có thông tin đăng nhập, thì không làm gì cả, để form đăng nhập hiện ra.
+        })();
+        // === KẾT THÚC: ĐOẠN MÃ TỰ ĐỘNG KIỂM TRA ĐĂNG NHẬP ===
+
+
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
         const toggleBtn = document.getElementById('toggle-btn');
@@ -64,7 +88,6 @@
             const password = document.getElementById('register-password').value;
             const confirmPassword = document.getElementById('register-password-confirm').value;
 
-            // === THAY ĐỔI: TẠO MỘT MẢNG ĐỂ LƯU TẤT CẢ CÁC LỖI ===
             let errors = [];
 
             if (username.length <= 4) {
@@ -77,15 +100,12 @@
                 errors.push('Mật khẩu nhập lại không khớp!');
             }
 
-            // Sau khi kiểm tra tất cả, nếu có lỗi thì hiển thị lỗi đầu tiên
             if (errors.length > 0) {
-                messageEl.textContent = errors[0]; // Hiển thị lỗi đầu tiên tìm thấy
+                messageEl.textContent = errors[0];
                 messageEl.className = 'error';
-                return; // Dừng lại
+                return;
             }
-            // =======================================================
-
-            // Nếu không có lỗi nào, tiếp tục gửi yêu cầu
+            
             const response = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
