@@ -7,27 +7,8 @@
     <link rel="stylesheet" href="/css/admin.css">
     <style>
         .card { padding: 25px; }
-        .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--border-color); }
-        .admin-item:last-child { border-bottom: none; }
-        .coin-controls { display: flex; align-items: center; gap: 10px; }
-        .coin-controls input { width: 100px; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-danger { background: #dc3545; color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
         #modal-message { margin-top: 15px; font-weight: bold; text-align: center; height: 20px; }
-        /* === THÊM MỚI: CSS cho tag thương hiệu === */
-        .admin-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .admin-brand-tag {
-            background-color: #e9ecef;
-            color: #495057;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.85em;
-            font-weight: bold;
-        }
         .form-control {
             width: 100%;
             padding: 12px;
@@ -35,6 +16,84 @@
             border: 1px solid #ced4da;
             background-color: #fff;
         }
+
+        /* === CSS MỚI CHO BỐ CỤC THEO THƯƠNG HIỆU === */
+        .brand-group {
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            background-color: #fcfcfc;
+            overflow: hidden;
+        }
+
+        .brand-header {
+            background-color: #e9ecef;
+            padding: 12px 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #495057;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .admin-item {
+            display: grid;
+            grid-template-columns: 1fr auto; /* Chia 2 cột: thông tin và control */
+            gap: 20px;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .brand-group .admin-item:last-child {
+            border-bottom: none;
+        }
+
+        .admin-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .admin-main-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-username {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .admin-brand-tag {
+            background-color: var(--primary-red);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .admin-meta-info {
+            font-size: 0.85em;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .meta-separator {
+            font-weight: bold;
+            color: #ccc;
+        }
+
+        .coin-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .coin-controls input { width: 100px; }
+        .btn-danger { background: #dc3545; color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+        
     </style>
 </head>
 <body class="admin-page">
@@ -51,7 +110,7 @@
             <button class="btn-primary" style="width: auto; padding: 12px 20px;" onclick="openCreateAdminModal()">+ Tạo Admin Mới</button>
         </div>
 
-        <div id="admin-list-container" class="card"></div>
+        <div id="admin-list-container"></div>
         <p id="message"></p>
     </main>
     
@@ -62,7 +121,6 @@
             <form id="create-admin-form">
                 <div class="form-group"><input type="text" id="new-admin-username" placeholder="Tên đăng nhập" required></div>
                 <div class="form-group"><input type="password" id="new-admin-password" placeholder="Mật khẩu" required></div>
-                <!-- === THÊM MỚI: Dropdown chọn thương hiệu === -->
                 <div class="form-group">
                     <select id="new-admin-brand" class="form-control" required>
                         <option value="">-- Chọn thương hiệu quản lý --</option>
@@ -101,8 +159,23 @@
             createAdminForm.reset();
             showModalMessage('', true);
         }
+        
+        // HÀM MỚI: Tính toán số ngày kể từ một ngày cho trước
+        function calculateDaysSince(dateString) {
+            const creationDate = new Date(dateString);
+            const today = new Date();
+            // Bỏ qua phần giờ, phút, giây để so sánh ngày
+            creationDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            
+            const differenceInTime = today.getTime() - creationDate.getTime();
+            const differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24));
+            
+            if (differenceInDays < 0) return 'Tương lai'; // Trường hợp lỗi
+            if (differenceInDays === 0) return 'Hôm nay';
+            return `${differenceInDays} ngày`;
+        }
 
-        // THÊM MỚI: Hàm để tải danh sách thương hiệu vào dropdown
         async function loadBrandsIntoSelect() {
             try {
                 const response = await fetch('/api/brands');
@@ -116,33 +189,72 @@
                         selectEl.appendChild(option);
                     });
                 }
-            } catch(e) {
-                console.error("Lỗi khi tải thương hiệu:", e);
-            }
+            } catch(e) { console.error("Lỗi khi tải thương hiệu:", e); }
         }
 
+        // HÀM QUAN TRỌNG: ĐÃ VIẾT LẠI HOÀN TOÀN
         async function fetchAndDisplayAdmins() {
             const response = await fetch('/api/sub-admins');
             const data = await response.json();
-            adminListContainer.innerHTML = '';
+            adminListContainer.innerHTML = ''; // Xóa nội dung cũ
+
             if (data.success && data.admins.length > 0) {
-                data.admins.forEach(admin => {
-                    const item = document.createElement('div');
-                    item.className = 'admin-item';
-                    // THAY ĐỔI: Hiển thị tên và thương hiệu được gán
-                    item.innerHTML = `
-                        <div class="admin-info">
-                            <span>${admin.username} (Token: ${admin.coins})</span>
-                            <span class="admin-brand-tag">${admin.assigned_brand || 'Chưa gán'}</span>
-                        </div>
-                        <div class="coin-controls">
-                            <input type="number" min="1" placeholder="Số Token cấp" id="coins-for-${admin._id}">
-                            <button class="btn-primary" onclick="grantCoins('${admin._id}')">Cấp</button>
-                            <button class="btn-danger" onclick="deleteAdmin('${admin._id}', '${admin.username}')">Xóa</button>
-                        </div>
-                    `;
-                    adminListContainer.appendChild(item);
-                });
+                // Bước 1: Nhóm các admin theo 'assigned_brand'
+                const groupedAdmins = data.admins.reduce((acc, admin) => {
+                    const brand = admin.assigned_brand || 'Chưa Phân Loại';
+                    if (!acc[brand]) {
+                        acc[brand] = [];
+                    }
+                    acc[brand].push(admin);
+                    return acc;
+                }, {});
+
+                // Bước 2: Lấy danh sách các thương hiệu và sắp xếp
+                const sortedBrands = Object.keys(groupedAdmins).sort();
+
+                // Bước 3: Lặp qua từng nhóm thương hiệu đã sắp xếp và hiển thị
+                for (const brand of sortedBrands) {
+                    const adminsInGroup = groupedAdmins[brand];
+
+                    const brandGroup = document.createElement('div');
+                    brandGroup.className = 'brand-group';
+
+                    const brandHeader = document.createElement('div');
+                    brandHeader.className = 'brand-header';
+                    brandHeader.textContent = `Thương hiệu: ${brand}`;
+                    brandGroup.appendChild(brandHeader);
+
+                    adminsInGroup.forEach(admin => {
+                        const item = document.createElement('div');
+                        item.className = 'admin-item';
+                        
+                        const creationDate = new Date(admin.createdAt).toLocaleDateString('vi-VN');
+                        const daysActive = calculateDaysSince(admin.createdAt);
+                        
+                        item.innerHTML = `
+                            <div class="admin-details">
+                                <div class="admin-main-info">
+                                    <span class="admin-username">${admin.username}</span>
+                                    <span class="admin-brand-tag">Token: ${admin.coins}</span>
+                                </div>
+                                <div class="admin-meta-info">
+                                    <span>Ngày tạo: ${creationDate}</span>
+                                    <span class="meta-separator">|</span>
+                                    <span>Hoạt động: ${daysActive}</span>
+                                </div>
+                            </div>
+                            <div class="coin-controls">
+                                <input type="number" min="1" placeholder="Số Token cấp" id="coins-for-${admin._id}">
+                                <button class="btn-primary" onclick="grantCoins('${admin._id}')">Cấp</button>
+                                <button class="btn-danger" onclick="deleteAdmin('${admin._id}', '${admin.username}')">Xóa</button>
+                            </div>
+                        `;
+                        brandGroup.appendChild(item);
+                    });
+                    
+                    adminListContainer.appendChild(brandGroup);
+                }
+
             } else {
                 adminListContainer.innerHTML = '<p style="text-align:center; color: var(--text-light);">Chưa có Admin phụ nào.</p>';
             }
@@ -153,13 +265,11 @@
             showModalMessage('Đang xử lý...', true);
             const username = document.getElementById('new-admin-username').value;
             const password = document.getElementById('new-admin-password').value;
-            // THÊM MỚI: Lấy giá trị thương hiệu từ dropdown
             const brandName = document.getElementById('new-admin-brand').value;
             
             const response = await fetch('/api/create-sub-admin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // THAY ĐỔI: Gửi cả brandName đi
                 body: JSON.stringify({ username, password, brandName })
             });
             const result = await response.json();
@@ -208,7 +318,7 @@
 
         window.onload = () => {
             fetchAndDisplayAdmins();
-            loadBrandsIntoSelect(); // Gọi hàm tải thương hiệu
+            loadBrandsIntoSelect();
         };
         window.onclick = (event) => {
             if (event.target == createAdminModal) {

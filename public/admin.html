@@ -22,6 +22,7 @@
         <h1>Bảng Điều Khiển Admin</h1>
         
         <div class="grid-container" style="margin-top: 50px;">
+            <!-- Menu này chỉ Super Admin mới thấy -->
             <a href="/super_admin_manage_admins.html" class="admin-menu-card" id="manage-admins-menu" style="display: none;">
                 <div class="icon">
                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -30,6 +31,7 @@
                <p>Tạo và cấp Token cho các tài khoản Admin phụ.</p>
            </a>
 
+            <!-- Menu này tất cả Admin đều thấy -->
             <a href="/admin_users.html" class="admin-menu-card">
                  <div class="icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -37,7 +39,9 @@
                 <h3>Quản Lý User</h3>
                 <p>Cấp Token và quản lý tài khoản người dùng.</p>
             </a>
-            <a href="/admin_games.html" class="admin-menu-card">
+
+            <!-- Menu này cũng chỉ Super Admin mới thấy -->
+            <a href="/admin_games.html" class="admin-menu-card" id="manage-games-menu" style="display: none;">
                 <div class="icon">
                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                 </div>
@@ -65,9 +69,15 @@
 
         window.onload = () => {
             const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true';
+
+            // Logic kiểm tra quyền Super Admin
             if (isSuperAdmin) {
+                // Nếu là Super Admin, hiện cả 2 menu
                 document.getElementById('manage-admins-menu').style.display = 'block';
+                document.getElementById('manage-games-menu').style.display = 'block';
             }
+            // Nếu không phải Super Admin, cả 2 menu sẽ giữ nguyên style="display: none;" và bị ẩn đi.
+
             fetchAdminInfo();
         };
 

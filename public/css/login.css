@@ -21,22 +21,50 @@
 @keyframes glowing-border { 0% { box-shadow: 0 0 15px rgba(217, 4, 41, 0.2); } 50% { box-shadow: 0 0 30px rgba(217, 4, 41, 0.5); } 100% { box-shadow: 0 0 15px rgba(217, 4, 41, 0.2); } }
 .login-promo-panel, .login-form-panel { position: relative; z-index: 5; }
 
-/* --- ĐÃ SỬA: TỶ LỆ 40%, NỀN SÁNG VÀ HIỆU ỨNG MỚI --- */
+/* === BẮT ĐẦU PHẦN CHỈNH SỬA LỚN === */
+
+/* Keyframes cho hiệu ứng nền động */
+@keyframes animated-promo-bg {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 .login-promo-panel {
     width: 40%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 30px; /* Tăng padding để góc không bị sát */
     box-sizing: border-box;
-    background: #f8f9fa;
     position: relative;
-    border-right: 1px solid #eee;
+    border-right: 1px solid #333;
+    
+    /* THÊM MỚI: Nền gradient động */
+    background: linear-gradient(-45deg, #110101, #2d0303, #000000, #410505);
+    background-size: 400% 400%;
+    animation: animated-promo-bg 15s ease infinite;
 }
 
-/* Hiệu ứng 4 Góc Năng Lượng */
+/* Div bọc ảnh mới */
+.promo-image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* Rất quan trọng để định vị 2 góc còn lại */
+}
+
+/* Keyframes cho hiệu ứng góc */
+@keyframes pulse-corners {
+    0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 5px var(--primary-red)); }
+    50% { opacity: 1; filter: drop-shadow(0 0 12px var(--primary-red)); }
+}
+
+/* ĐỊNH NGHĨA CHUNG CHO CẢ 4 GÓC */
 .login-promo-panel::before, .login-promo-panel::after,
-.login-promo-panel img::before, .login-promo-panel img::after {
+.promo-image-wrapper::before, .promo-image-wrapper::after {
     content: '';
     position: absolute;
     width: 30px;
@@ -44,35 +72,52 @@
     border-color: var(--primary-red);
     border-style: solid;
     animation: pulse-corners 3s infinite ease-in-out;
-}
-.login-promo-panel::before { top: 30px; left: 30px; border-width: 3px 0 0 3px; }
-.login-promo-panel::after { bottom: 30px; right: 30px; border-width: 0 3px 3px 0; }
-.login-promo-panel img::before { top: 30px; right: 30px; border-width: 3px 3px 0 0; }
-.login-promo-panel img::after { bottom: 30px; left: 30px; border-width: 0 0 3px 3px; }
-
-@keyframes pulse-corners {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; filter: drop-shadow(0 0 8px var(--primary-red)); }
+    z-index: 10;
 }
 
-/* --- ĐÃ SỬA: LÀM ẢNH LỚN HƠN VÀ THÊM HIỆU ỨNG TỎA SÁNG --- */
-.login-promo-panel img {
+/* TẠO 4 GÓC RIÊNG BIỆT */
+/* Góc trên-trái (từ panel) */
+.login-promo-panel::before { 
+    top: 20px; 
+    left: 20px; 
+    border-width: 3px 0 0 3px; 
+}
+/* Góc dưới-phải (từ panel) */
+.login-promo-panel::after { 
+    bottom: 20px; 
+    right: 20px; 
+    border-width: 0 3px 3px 0; 
+}
+/* Góc trên-phải (từ div bọc) */
+.promo-image-wrapper::before { 
+    top: -10px; /* Điều chỉnh lại vị trí cho khớp */
+    right: -10px;
+    border-width: 3px 3px 0 0; 
+}
+/* Góc dưới-trái (từ div bọc) */
+.promo-image-wrapper::after { 
+    bottom: -10px; /* Điều chỉnh lại vị trí cho khớp */
+    left: -10px;
+    border-width: 0 0 3px 3px; 
+}
+
+.promo-image-wrapper img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    position: relative; /* Cần thiết để pseudo-elements hoạt động */
+    position: relative;
     z-index: 1;
     border-radius: 12px;
-    /* Hiệu ứng tỏa sáng */
     animation: energy-glow 4s infinite ease-in-out;
 }
 
 @keyframes energy-glow {
-    0%, 100% { filter: drop-shadow(0 0 10px rgba(217, 4, 41, 0.3)); }
-    50% { filter: drop-shadow(0 0 25px rgba(217, 4, 41, 0.6)); }
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(217, 4, 41, 0.4)); }
+    50% { filter: drop-shadow(0 0 25px rgba(217, 4, 41, 0.7)); }
 }
 
-/* --- ĐÃ SỬA: TỶ LỆ 60% --- */
+/* === KẾT THÚC PHẦN CHỈNH SỬA LỚN === */
+
 .login-form-panel { 
     width: 60%;
     padding: 50px;
@@ -122,18 +167,21 @@ input:focus { outline: none; border-color: var(--primary-red); box-shadow: 0 0 1
     .login-promo-panel {
         background: transparent;
         padding: 50px 20px 30px;
+        animation: none; /* Tắt hiệu ứng nền trên mobile cho nhẹ */
     }
-    .login-promo-panel img {
+
+    /* Ẩn hiệu ứng góc trên mobile */
+    .login-promo-panel::before, .login-promo-panel::after,
+    .promo-image-wrapper::before, .promo-image-wrapper::after {
+        display: none;
+    }
+    
+    .promo-image-wrapper img {
         background-color: #fff;
         padding: 10px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         max-height: 100%;
         animation: none; /* Tắt hiệu ứng tỏa sáng trên mobile cho gọn */
-    }
-    /* Ẩn hiệu ứng góc trên mobile */
-    .login-promo-panel::before, .login-promo-panel::after,
-    .login-promo-panel img::before, .login-promo-panel img::after {
-        display: none;
     }
 
     .login-form-panel {

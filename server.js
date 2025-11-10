@@ -47,6 +47,7 @@ mongoose.connect(process.env.MONGODB_URI)
         console.error('Could not connect to MongoDB...', err)
     });
 
+// === THAY ĐỔI: THÊM TIMESTAMPS ===
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
@@ -60,7 +61,7 @@ const userSchema = new mongoose.Schema({
         of: Number,
         default: {}
     }
-});
+}, { timestamps: true }); // Thêm timestamps để tự động có createdAt
 
 const lobbySchema = new mongoose.Schema({
     name: String,
@@ -103,12 +104,29 @@ async function createSuperAdmin() {
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
-        if (!username || !password) return res.status(400).json({ success: false, message: 'Tên đăng nhập và mật khẩu không được để trống' });
+        // Kiểm tra trường rỗng
+        if (!username || !password) {
+            return res.status(400).json({ success: false, message: 'Tên đăng nhập và mật khẩu không được để trống' });
+        }
+        
+        // === THÊM MỚI: KIỂM TRA ĐỘ DÀI ===
+        if (username.length <= 4) {
+            return res.status(400).json({ success: false, message: 'Tên đăng nhập phải có nhiều hơn 4 ký tự' });
+        }
+        if (password.length <= 6) {
+            return res.status(400).json({ success: false, message: 'Mật khẩu phải có nhiều hơn 6 ký tự' });
+        }
+        // ===================================
+
         const existingUser = await User.findOne({ username });
-        if (existingUser) return res.status(409).json({ success: false, message: 'Tên đăng nhập đã tồn tại' });
+        if (existingUser) {
+            return res.status(409).json({ success: false, message: 'Tên đăng nhập đã tồn tại' });
+        }
+        
         const hashedPassword = await bcrypt.hash(password, 10);
         await new User({ username, password: hashedPassword }).save();
         res.json({ success: true, message: 'Đăng ký thành công!' });
+
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi server khi tạo tài khoản' });
     }
@@ -160,7 +178,7 @@ app.post('/api/link-user', async (req, res) => {
         if (user.managed_by_admin_id) return res.status(409).json({ success: false, message: `Tài khoản "${username}" đã được quản lý bởi một admin khác.` });
         await User.updateOne({ _id: user._id }, { $set: { managed_by_admin_id: adminId } });
         res.json({ success: true, message: `Thêm tài khoản "${username}" thành công!` });
-    } catch (error) { // SỬA LỖI Ở ĐÂY
+    } catch (error) { 
         res.status(500).json({ success: false, message: "Lỗi server khi cập nhật." });
     }
 });
@@ -215,15 +233,16 @@ app.post('/api/update-coins', async (req, res) => {
         
         res.json({ success: true, message: `Cập nhật ${numCoins} Token cho thương hiệu ${brandName} thành công!` });
 
-    } catch (error) { // SỬA LỖI Ở ĐÂY
+    } catch (error) { 
         console.error("Update coins error:", error);
         res.status(500).json({ success: false, message: "Lỗi server khi cập nhật Token." });
     }
 });
 
+// === THAY ĐỔI: THÊM createdAt VÀO SELECT ===
 app.get('/api/sub-admins', async (req, res) => {
     try {
-        const subAdmins = await User.find({ is_admin: true, is_super_admin: false }).select('_id username coins assigned_brand');
+        const subAdmins = await User.find({ is_admin: true, is_super_admin: false }).select('_id username coins assigned_brand createdAt');
         res.json({ success: true, admins: subAdmins });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server khi lấy danh sách admin." });
@@ -370,13 +389,29 @@ app.get('/api/games-with-rates', async (req, res) => {
         }
         const games = await Game.find({ lobby_id }).lean();
         if (games.length > 0) {
-            let gamesWithRates = games.map(game => ({ ...game, winRate: Math.floor(Math.random() * (85 - 30 + 1)) + 30 }));
-            const highRateCount = games.length > 1 ? (Math.random() < 0.5 ? 1 : 2) : 1;
+            // THAY ĐỔI 1: Tỷ lệ cơ bản giờ là từ 10% đến 85%
+            let gamesWithRates = games.map(game => ({ 
+                ...game, 
+                winRate: Math.floor(Math.random() * (85 - 10 + 1)) + 10 
+            }));
+
+            // THAY ĐỔI 2: Luôn có từ 2 đến 5 game có tỷ lệ jackpot (>85%)
+            // Tính số lượng game jackpot ngẫu nhiên từ 2 đến 5, nhưng không bao giờ nhiều hơn tổng số game
+            const randomHighRateCount = Math.floor(Math.random() * 4) + 2; // Số ngẫu nhiên từ 2 đến 5
+            const highRateCount = Math.min(games.length, randomHighRateCount);
+
+            // Lấy ra các chỉ số ngẫu nhiên của các game để gán tỷ lệ jackpot
             const indices = [...Array(games.length).keys()].sort(() => 0.5 - Math.random());
+            
             for (let i = 0; i < highRateCount; i++) {
-                gamesWithRates[indices[i]].winRate = Math.floor(Math.random() * (95 - 86 + 1)) + 86;
+                const gameIndexToBoost = indices[i];
+                // Gán tỷ lệ jackpot từ 86% đến 95%
+                gamesWithRates[gameIndexToBoost].winRate = Math.floor(Math.random() * (95 - 86 + 1)) + 86;
             }
-            gamesWithRates.sort((a, b) => b.winRate - a.winRate);
+            
+            // THAY ĐỔI 3: Xáo trộn (sắp xếp ngẫu nhiên) toàn bộ danh sách game cuối cùng
+            gamesWithRates.sort(() => 0.5 - Math.random());
+
             lobbyRatesCache[lobby_id] = { timestamp: now, games: gamesWithRates };
             res.json({ success: true, games: gamesWithRates });
         } else {

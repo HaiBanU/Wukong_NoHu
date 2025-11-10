@@ -15,7 +15,10 @@
     <div class="digital-frame-corner corner-br"></div>
     <div class="login-container fadeIn">
         <div class="login-promo-panel">
-            <img src="/assets/images/promo.gif" alt="Promo Animation">
+            <!-- Thêm một div bọc ngoài thẻ img -->
+            <div class="promo-image-wrapper">
+                <img src="/assets/images/promo.gif" alt="Promo Animation">
+            </div>
         </div>
         <div class="login-form-panel">
             <form id="login-form">
@@ -61,12 +64,28 @@
             const password = document.getElementById('register-password').value;
             const confirmPassword = document.getElementById('register-password-confirm').value;
 
+            // === THAY ĐỔI: TẠO MỘT MẢNG ĐỂ LƯU TẤT CẢ CÁC LỖI ===
+            let errors = [];
+
+            if (username.length <= 4) {
+                errors.push('Tên đăng nhập phải có nhiều hơn 4 ký tự!');
+            }
+            if (password.length <= 6) {
+                errors.push('Mật khẩu phải có nhiều hơn 6 ký tự!');
+            }
             if (password !== confirmPassword) {
-                messageEl.textContent = 'Mật khẩu nhập lại không khớp!';
-                messageEl.className = 'error';
-                return;
+                errors.push('Mật khẩu nhập lại không khớp!');
             }
 
+            // Sau khi kiểm tra tất cả, nếu có lỗi thì hiển thị lỗi đầu tiên
+            if (errors.length > 0) {
+                messageEl.textContent = errors[0]; // Hiển thị lỗi đầu tiên tìm thấy
+                messageEl.className = 'error';
+                return; // Dừng lại
+            }
+            // =======================================================
+
+            // Nếu không có lỗi nào, tiếp tục gửi yêu cầu
             const response = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
