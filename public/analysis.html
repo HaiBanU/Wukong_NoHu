@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-     <title>Wukong Slot</title> <!-- Đã sửa -->
-    <link rel="icon" type="image/png" href="/assets/images/favicon.png"> <!-- Đã thêm -->
+    <title>Wukong Slot - Phân Tích Game</title>
+    <link rel="icon" type="image/png" href="/assets/images/favicon.png">
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/user.css"> 
     <link rel="stylesheet" href="/css/analysis.css">
 </head>
-<body>
+<body class="analysis-page">
     <video autoplay muted loop id="background-video">
         <source src="/assets/videos/space-bg.mp4" type="video/mp4">
     </video>
@@ -26,6 +26,9 @@
     <main class="analysis-main">
         <div class="analysis-frame">
             <div class="analysis-frame-inner">
+                <!-- Div mới cho hiệu ứng năng lượng -->
+                <div class="particle-burst"></div>
+                
                 <div id="frame-wide-effects">
                     <div id="particle-field"></div>
                 </div>
@@ -37,7 +40,6 @@
                             <span id="progress-text">0%</span>
                         </div>
                         
-                        <!-- === BẮT ĐẦU THÊM MỚI: HIỆU ỨNG CẦU NỐI DỮ LIỆU === -->
                         <div class="data-bridge">
                             <div class="bridge-line line-1"></div>
                             <div class="bridge-line line-2"></div>
@@ -46,7 +48,6 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m15.5 8.5-7 7"/><path d="m8.5 8.5 7 7"/></svg>
                             </div>
                         </div>
-                        <!-- === KẾT THÚC THÊM MỚI === -->
 
                         <div class="gif-frame">
                             <div class="gif-frame-inner">
