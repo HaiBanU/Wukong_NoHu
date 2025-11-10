@@ -170,51 +170,55 @@ body.admin-page h4 {
     background: #c82333;
 }
 
-/* 7. Sửa lại các màu chữ đặc biệt */
 p[style*="var(--admin-text-subtle)"],
 p[style*="var(--text-light)"] {
-    color: #888 !important; /* Dùng !important để ghi đè style inline */
+    color: #888 !important;
 }
 
-/* Style cho thông báo trong Modal */
 #modal-message {
     margin-top: 15px;
     font-weight: bold;
     text-align: center;
     height: 20px;
 }
-/* ======================================= */
-/* === CĂN GIỮA VÀ LÀM NỔI BẬT THẺ ADMIN === */
-/* ======================================= */
 
-/* Canh giữa tiêu đề chính */
 .admin-main-container h1 {
     text-align: center;
     margin-bottom: 40px;
 }
 
-/* Sử dụng Flexbox để căn giữa các thẻ card */
 .admin-main-container .grid-container {
     display: flex;
-    justify-content: center; /* Quan trọng: Đưa các item ra giữa */
+    justify-content: center;
     align-items: center;
-    gap: 30px; /* Tăng khoảng cách giữa 2 thẻ */
-    
-    /* Ghi đè lại thuộc tính grid để không ảnh hưởng */
+    gap: 30px;
     grid-template-columns: none; 
 }
 
-/* Tùy chỉnh lại thẻ card để nổi bật hơn */
 .admin-menu-card {
-    border: none; /* Bỏ border cũ */
-    border-top: 4px solid var(--primary-red); /* Thêm một đường viền đỏ nổi bật ở trên */
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07); /* Tăng độ sâu cho bóng đổ */
-    max-width: 350px; /* Giới hạn độ rộng của thẻ */
-    text-align: left; /* Giữ chữ bên trong thẻ canh lề trái */
+    border: none;
+    border-top: 4px solid var(--primary-red);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+    max-width: 350px;
+    text-align: left;
 }
 
-/* Làm cho hiệu ứng khi di chuột vào mạnh mẽ hơn */
 .admin-menu-card:hover {
     transform: translateY(-8px) scale(1.03);
-    box-shadow: 0 15px 30px rgba(217, 4, 41, 0.15); /* Đổi màu bóng đổ khi hover */
+    box-shadow: 0 15px 30px rgba(217, 4, 41, 0.15);
+}
+
+/* === CSS MỚI CHO HIỂN THỊ TOKEN ADMIN === */
+.header-right-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+#admin-coin-display {
+    font-weight: bold;
+    color: #333;
+    background-color: #e9ecef;
+    padding: 8px 15px;
+    border-radius: 8px;
 }

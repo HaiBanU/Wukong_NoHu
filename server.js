@@ -73,11 +73,11 @@ const Game = mongoose.model('Game', gameSchema);
 
 // === THAY ĐỔI: Chỉ tạo một Super Admin duy nhất ===
 async function createSuperAdmin() {
-    const superAdminUsername = 'longho'; // Tên tài khoản Admin Tổng
+    const superAdminUsername = 'admin'; // Tên tài khoản Admin Tổng
     try {
         const existingAdmin = await User.findOne({ username: superAdminUsername });
         if (!existingAdmin) {
-            const hashedPassword = await bcrypt.hash('173204', 10);
+            const hashedPassword = await bcrypt.hash('admin123', 10);
             await new User({
                 username: superAdminUsername,
                 password: hashedPassword,
@@ -96,7 +96,6 @@ async function createSuperAdmin() {
 
 // API Đăng ký
 app.post('/api/register', async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { username, password } = req.body;
         if (!username || !password) return res.status(400).json({ success: false, message: 'Tên đăng nhập và mật khẩu không được để trống' });
@@ -135,7 +134,6 @@ app.post('/api/login', async (req, res) => {
 
 // API lấy người dùng theo admin
 app.get('/api/users', async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { admin_id } = req.query;
         if (!admin_id) return res.status(400).json({ success: false, message: "Thiếu thông tin admin." });
@@ -148,7 +146,6 @@ app.get('/api/users', async (req, res) => {
 
 // API gán user cho admin
 app.post('/api/link-user', async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { adminId, username } = req.body;
         if (!adminId || !username) return res.status(400).json({ success: false, message: "Vui lòng nhập tên tài khoản." });
@@ -164,7 +161,6 @@ app.post('/api/link-user', async (req, res) => {
 
 // API xóa user
 app.post('/api/delete-user', async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { userId, adminId } = req.body;
         if (!userId || !adminId) return res.status(400).json({ success: false, message: "Thiếu thông tin." });
@@ -295,13 +291,8 @@ app.post('/api/delete-sub-admin', async (req, res) => {
     }
 });
 
-
-
-// --- CÁC API KHÁC GIỮ NGUYÊN ---
-
 // API thêm sảnh game
 app.post('/api/add-lobby', upload.single('logo'), async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { name } = req.body;
         if (!req.file) return res.status(400).json({ success: false, message: 'Vui lòng chọn ảnh logo.' });
@@ -316,7 +307,6 @@ app.post('/api/add-lobby', upload.single('logo'), async (req, res) => {
 
 // API thêm game
 app.post('/api/add-game', upload.single('image'), async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { lobby_id, name } = req.body;
         if (!req.file) return res.status(400).json({ success: false, message: 'Vui lòng chọn ảnh game.' });
@@ -330,9 +320,8 @@ app.post('/api/add-game', upload.single('image'), async (req, res) => {
     }
 });
 
-// API lấy thông tin user
+// API lấy thông tin user (bao gồm cả admin)
 app.get('/api/user-info', async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { username } = req.query;
         const userInfo = await User.findOne({ username }).select('username coins');
@@ -345,7 +334,6 @@ app.get('/api/user-info', async (req, res) => {
 
 // API lấy danh sách sảnh
 app.get('/api/lobbies', async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const lobbies = await Lobby.find({}).sort({ position: 1, _id: 1 });
         res.json({ success: true, lobbies });
@@ -356,7 +344,6 @@ app.get('/api/lobbies', async (req, res) => {
 
 // API cập nhật thứ tự sảnh
 app.post('/api/update-lobby-order', async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { orderedIds } = req.body;
         if (!Array.isArray(orderedIds)) {
@@ -375,7 +362,6 @@ app.post('/api/update-lobby-order', async (req, res) => {
 
 // API lấy game với tỷ lệ random
 app.get('/api/games-with-rates', async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { lobby_id } = req.query;
         if (!lobby_id) return res.status(400).json({ success: false, message: "Thiếu ID của sảnh" });
@@ -405,7 +391,6 @@ app.get('/api/games-with-rates', async (req, res) => {
 
 // API lấy danh sách game theo sảnh
 app.get('/api/games', async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { lobby_id } = req.query;
         if (!lobby_id) return res.status(400).json({ success: false, message: "Thiếu ID của sảnh" });
@@ -418,7 +403,6 @@ app.get('/api/games', async (req, res) => {
 
 // API xóa game
 app.post('/api/delete-game', async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { gameId } = req.body;
         if (!gameId) return res.status(400).json({ success: false, message: "Thiếu ID của game." });
@@ -434,7 +418,6 @@ app.post('/api/delete-game', async (req, res) => {
 
 // API phân tích game
 app.post('/api/analyze-game', async (req, res) => {
-    // ... (Giữ nguyên không đổi)
     try {
         const { username, winRate } = req.body;
         if (!username || !winRate) return res.status(400).json({ success: false, message: "Thiếu thông tin để phân tích." });

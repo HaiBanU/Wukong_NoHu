@@ -8,14 +8,11 @@
     <link rel="stylesheet" href="/css/login.css">
 </head>
 <body class="full-page">
-
     <canvas id="matrix-canvas"></canvas>
-
     <div class="digital-frame-corner corner-tl"></div>
     <div class="digital-frame-corner corner-tr"></div>
     <div class="digital-frame-corner corner-bl"></div>
     <div class="digital-frame-corner corner-br"></div>
-
     <div class="login-container fadeIn">
         <div class="login-promo-panel">
             <img src="/assets/images/promo.gif" alt="Promo Animation">
@@ -40,7 +37,6 @@
             <p id="message"></p>
         </div>
     </div>
-    
     <script>
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
@@ -100,7 +96,6 @@
                 localStorage.setItem('username', username);
                 if (data.isAdmin) {
                     localStorage.setItem('adminId', data.userId);
-                    // === ĐÃ SỬA: Lưu trạng thái Super Admin ===
                     localStorage.setItem('isSuperAdmin', data.isSuperAdmin); 
                 }
                 window.location.href = data.isAdmin ? '/admin.html' : '/brand-selection.html';

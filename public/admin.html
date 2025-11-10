@@ -9,17 +9,19 @@
 <body class="admin-page">
     <header class="header fadeIn">
         <div></div> 
-        <button class="logout-button">
-             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            <span>Đăng Xuất</span>
-        </button>
+        <div class="header-right-group">
+            <div id="admin-coin-display">Token: ...</div>
+            <button class="logout-button">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span>Đăng Xuất</span>
+            </button>
+        </div>
     </header>
 
     <main class="fadeIn admin-main-container">
         <h1>Bảng Điều Khiển Admin</h1>
         
         <div class="grid-container" style="margin-top: 50px;">
-            <!-- === THÊM MỚI: Menu Quản lý Admin, chỉ Super Admin thấy === -->
             <a href="/super_admin_manage_admins.html" class="admin-menu-card" id="manage-admins-menu" style="display: none;">
                 <div class="icon">
                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -46,12 +48,27 @@
     </main>
 
     <script>
-        // === THÊM MỚI: Kiểm tra và hiển thị menu cho Super Admin ===
+        async function fetchAdminInfo() {
+            const username = localStorage.getItem('username');
+            const coinDisplay = document.getElementById('admin-coin-display');
+            if (localStorage.getItem('isSuperAdmin') === 'true' || !coinDisplay) {
+                if(coinDisplay) coinDisplay.style.display = 'none';
+                return;
+            };
+
+            const response = await fetch(`/api/user-info?username=${username}`);
+            const data = await response.json();
+            if (data.success) {
+                coinDisplay.textContent = `Token còn lại: ${data.userInfo.coins}`;
+            }
+        }
+
         window.onload = () => {
             const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true';
             if (isSuperAdmin) {
                 document.getElementById('manage-admins-menu').style.display = 'block';
             }
+            fetchAdminInfo();
         };
 
         document.querySelector('.logout-button').addEventListener('click', () => {
