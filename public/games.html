@@ -7,7 +7,6 @@
     <link rel="icon" type="image/png" href="/assets/images/favicon.png"> <!-- Đã thêm -->
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/user.css">
-    <!-- THÊM CSS MỚI CHO CÁC NÚT LỌC -->
     <style>
         #filter-container {
             display: flex;
@@ -16,7 +15,7 @@
             margin-bottom: 20px;
         }
         .filter-btn {
-            border: 2px solid transparent; /* Thêm border trong suốt để khi active không bị giật layout */
+            border: 2px solid transparent;
             color: #fff;
             padding: 8px 20px;
             border-radius: 50px;
@@ -26,40 +25,30 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
 
-        /* === BẮT ĐẦU PHẦN SỬA LẠI MÀU SẮC BAN ĐẦU === */
-
-        /* Màu cho nút "Tất Cả" và "Chờ" (màu đỏ) */
         .filter-btn.filter-all,
         .filter-btn.filter-wait {
             background: linear-gradient(45deg, #a40606, #d90429);
         }
 
-        /* Màu cho nút "Jackpot" (màu xanh lá) */
         .filter-btn.filter-jackpot {
             background: linear-gradient(45deg, #00b894, #00ff8c);
         }
 
-        /* Màu cho nút "Chơi" (màu vàng/cam) */
         .filter-btn.filter-play {
             background: linear-gradient(45deg, #ff8e00, #ffc62b);
         }
         
-        /* Hiệu ứng KHI DI CHUỘT VÀO (áp dụng cho tất cả các nút) */
         .filter-btn:hover {
             transform: translateY(-2px);
-            filter: brightness(1.15); /* Làm nút sáng hơn một chút */
+            filter: brightness(1.15);
         }
 
-        /* Hiệu ứng KHI NÚT ĐƯỢC CHỌN (active) */
         .filter-btn.active {
             transform: translateY(-2px) scale(1.05);
-            filter: brightness(1.2); /* Sáng hơn nữa */
+            filter: brightness(1.2);
             box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-            border-color: #fff; /* Thêm viền trắng để nổi bật */
+            border-color: #fff;
         }
-        
-        /* === KẾT THÚC PHẦN SỬA LẠI MÀU SẮC BAN ĐẦU === */
-
     </style>
 </head>
 <script>
@@ -69,11 +58,16 @@
     }
 </script>
 <body class="games-page">
-    <video autoplay muted loop id="background-video">
-        <source src="/assets/videos/space-bg.mp4" type="video/mp4">
-    </video>
+    <div id="background-effects"></div>
+    <div id="grid-overlay"></div>
+
     <div class="video-overlay"></div>
-    <div class="shooting-stars"><span class="star"></span><span class="star"></span></div>
+    <div class="shooting-stars">
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+    </div>
 
     <header class="header games-header fadeIn">
         <a href="javascript:history.back()" class="back-button-user">← Quay Lại</a>
@@ -82,7 +76,6 @@
     </header>
 
     <main class="main-content fadeIn" style="animation-delay: 0.2s;">
-        <!-- HTML của các nút không thay đổi, chỉ CSS thay đổi -->
         <div id="filter-container">
             <button class="filter-btn filter-all active" data-filter="all">Tất Cả</button>
             <button class="filter-btn filter-jackpot" data-filter="jackpot">Jackpot</button>
@@ -108,12 +101,34 @@
     </div>
 
     <script>
-        // --- PHẦN JAVASCRIPT GIỮ NGUYÊN, KHÔNG CẦN THAY ĐỔI ---
         function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
-        const terminalMessages = [ "Đang quét các game...", "Phân tích dữ liệu thời gian thực.", "Chúc bạn may mắn!" ];
-        let currentMessageIndex = 0; let typingInterval;
+        
+        // === NÂNG CẤP: Thêm nhiều thông báo hơn và hiển thị ngẫu nhiên ===
+        const terminalMessages = [ 
+            "Đang tải dữ liệu trò chơi...", 
+            "Phân tích tỷ lệ thắng/thua trong phiên.", 
+            "Chúc bạn may mắn!",
+            "Hệ thống gợi ý đã được kích hoạt.",
+            "Chọn một trò chơi để bắt đầu phân tích sâu.",
+            "Theo dõi các biến động bất thường...",
+            "Dữ liệu được làm mới liên tục.",
+            "Sẵn sàng thực hiện phân tích."
+        ];
+        let lastMessageIndex = -1;
+        let typingInterval;
         function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
-        function showNextTerminalMessage() { const messageEl = document.getElementById('terminal-message'); if (!messageEl) return; const messageToShow = terminalMessages[currentMessageIndex]; typeMessage(messageEl, messageToShow); currentMessageIndex = (currentMessageIndex + 1) % terminalMessages.length; }
+        function showNextTerminalMessage() { 
+            const messageEl = document.getElementById('terminal-message'); 
+            if (!messageEl) return;
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * terminalMessages.length);
+            } while (randomIndex === lastMessageIndex && terminalMessages.length > 1);
+            lastMessageIndex = randomIndex;
+            const messageToShow = terminalMessages[randomIndex]; 
+            typeMessage(messageEl, messageToShow); 
+        }
+        // === KẾT THÚC NÂNG CẤP ===
 
         let allGames = [];
         const gameContainer = document.getElementById('game-container');
@@ -197,6 +212,17 @@
         };
 
         function getColorScheme(rate) { if (rate > 85) return { className: 'tag-jackpot', tag: 'JACKPOT', gradientColor: 'linear-gradient(45deg, #00ff8c, #00b894)' }; else if (rate > 60) return { className: 'tag-play', tag: 'CHƠI', gradientColor: 'linear-gradient(45deg, #ffc62b, #ff8e00)' }; else return { className: 'tag-wait', tag: 'CHỜ', gradientColor: 'linear-gradient(45deg, #d90429, #ef233c)' }; }
+    </script>
+    
+    <script>
+        const overlay = document.querySelector('.video-overlay');
+        if (overlay) {
+            window.addEventListener('mousemove', (e) => {
+                const { clientX, clientY } = e;
+                overlay.style.setProperty('--mouse-x', `${clientX}px`);
+                overlay.style.setProperty('--mouse-y', `${clientY}px`);
+            });
+        }
     </script>
 </body>
 </html>

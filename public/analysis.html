@@ -16,11 +16,17 @@
     }
 </script>
 <body class="analysis-page">
-    <video autoplay muted loop id="background-video">
-        <source src="/assets/videos/space-bg.mp4" type="video/mp4">
-    </video>
+    <div id="background-effects"></div>
+    <div id="grid-overlay"></div>
+
     <div class="video-overlay"></div>
-    <div class="shooting-stars"><span class="star"></span><span class="star"></span></div>
+    <!-- === CẬP NHẬT: TĂNG SỐ LƯỢNG SAO BĂNG LÊN 20 === -->
+    <div class="shooting-stars">
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+    </div>
     
     <header class="analysis-page-header">
         <a href="javascript:history.back()" class="back-button-user">← Quay Lại</a>
@@ -32,7 +38,6 @@
     <main class="analysis-main">
         <div class="analysis-frame">
             <div class="analysis-frame-inner">
-                <!-- Div mới cho hiệu ứng năng lượng -->
                 <div class="particle-burst"></div>
                 
                 <div id="frame-wide-effects">
@@ -100,5 +105,16 @@
         </div>
     </main>
     <script src="/js/analysis.js"></script>
+
+    <script>
+        const overlay = document.querySelector('.video-overlay');
+        if (overlay) {
+            window.addEventListener('mousemove', (e) => {
+                const { clientX, clientY } = e;
+                overlay.style.setProperty('--mouse-x', `${clientX}px`);
+                overlay.style.setProperty('--mouse-y', `${clientY}px`);
+            });
+        }
+    </script>
 </body>
 </html>

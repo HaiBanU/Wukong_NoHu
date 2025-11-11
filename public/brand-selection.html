@@ -16,12 +16,16 @@
     }
 </script>
 <body class="brand-selection-page">
-    <video autoplay muted loop id="background-video">
-        <source src="/assets/videos/space-bg.mp4" type="video/mp4">
-    </video>
-    <div class="video-overlay"></div>
+    <div id="background-effects"></div>
+    <div id="grid-overlay"></div>
     
-    <div class="shooting-stars"><span class="star"></span><span class="star"></span></div>
+    <div class="video-overlay"></div>
+    <div class="shooting-stars">
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+    </div>
 
     <header class="header fadeIn">
         <div class="header-left"><div id="welcome-message">Chào, ...!</div></div>
@@ -65,12 +69,34 @@
             updateClock();
             setInterval(updateClock, 1000);
             
-            const terminalMessages = [ "Hệ thống đã sẵn sàng...", "Vui lòng chọn một thương hiệu...", "Đang chờ lệnh của bạn." ];
-            let currentMessageIndex = 0; let typingInterval;
+            // === NÂNG CẤP: Thêm nhiều thông báo hơn và hiển thị ngẫu nhiên ===
+            const terminalMessages = [ 
+                "Hệ thống đã sẵn sàng...", 
+                "Vui lòng chọn một thương hiệu để tiếp tục.", 
+                "Đang chờ lệnh của bạn, Chỉ Huy.",
+                "Xác thực danh tính người dùng... Thành công.",
+                "Tải dữ liệu thương hiệu từ máy chủ.",
+                "Tất cả các module đã được khởi chạy.",
+                "Kết nối an toàn đã được thiết lập.",
+                "Sẵn sàng để đồng bộ hóa dữ liệu."
+            ];
+            let lastMessageIndex = -1;
+            let typingInterval;
             function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
-            function showNextTerminalMessage() { const messageEl = document.getElementById('terminal-message'); if (!messageEl) return; const messageToShow = terminalMessages[currentMessageIndex]; typeMessage(messageEl, messageToShow); currentMessageIndex = (currentMessageIndex + 1) % terminalMessages.length; }
+            function showNextTerminalMessage() { 
+                const messageEl = document.getElementById('terminal-message'); 
+                if (!messageEl) return;
+                let randomIndex;
+                do {
+                    randomIndex = Math.floor(Math.random() * terminalMessages.length);
+                } while (randomIndex === lastMessageIndex && terminalMessages.length > 1);
+                lastMessageIndex = randomIndex;
+                const messageToShow = terminalMessages[randomIndex]; 
+                typeMessage(messageEl, messageToShow); 
+            }
             showNextTerminalMessage();
-            setInterval(showNextTerminalMessage, 8000);
+            setInterval(showNextTerminalMessage, 8000); // Hiển thị thông báo mới sau mỗi 8 giây
+            // === KẾT THÚC NÂNG CẤP ===
 
             const username = localStorage.getItem('username');
             if (!username) { window.location.href = '/'; return; }
@@ -130,6 +156,17 @@
 
             updateCarousel();
         };
+    </script>
+    
+    <script>
+        const overlay = document.querySelector('.video-overlay');
+        if (overlay) {
+            window.addEventListener('mousemove', (e) => {
+                const { clientX, clientY } = e;
+                overlay.style.setProperty('--mouse-x', `${clientX}px`);
+                overlay.style.setProperty('--mouse-y', `${clientY}px`);
+            });
+        }
     </script>
 </body>
 </html>

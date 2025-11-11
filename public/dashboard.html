@@ -15,15 +15,20 @@
     }
 </script>
 <body class="dashboard-page">
-    <video autoplay muted loop id="background-video">
-        <source src="/assets/videos/space-bg.mp4" type="video/mp4">
-    </video>
+    <div id="background-effects"></div>
+    <div id="grid-overlay"></div>
+
     <div class="video-overlay"></div>
-    <div class="shooting-stars"><span class="star"></span><span class="star"></span></div>
+    <div class="shooting-stars">
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+    </div>
 
     <header class="header fadeIn">
         <div class="header-left">
-            <a href="/brand-selection.html" class="back-button-user" style="position: static; transform: none; text-decoration: none; color: white;">← Chọn Lại</a>
+            <a href="/brand-selection.html" class="back-button-user" style="position: static; transform: none; text-decoration: none;">← Chọn Lại</a>
         </div>
         <div class="header-center">
             <div id="welcome-message">Chào, ...!</div>
@@ -53,10 +58,33 @@
     <script>
         document.querySelector('.logout-button').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
         function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
-        const terminalMessages = [ "Đang quét các sảnh...", "Phân tích dữ liệu thời gian thực.", "Hệ thống đã sẵn sàng." ];
-        let currentMessageIndex = 0; let typingInterval;
+        
+        // === NÂNG CẤP: Thêm nhiều thông báo hơn và hiển thị ngẫu nhiên ===
+        const terminalMessages = [ 
+            "Đang quét các sảnh game khả dụng...", 
+            "Phân tích dữ liệu sảnh theo thời gian thực.", 
+            "Tối ưu hóa luồng dữ liệu đầu vào.",
+            "Chào mừng trở lại, Chỉ Huy.",
+            "Sẵn sàng nhận lệnh truy cập sảnh.",
+            "Tỷ lệ biến động đang được theo dõi.",
+            "Tất cả các hệ thống đều đang hoạt động.",
+            "Hiệu suất hệ thống: 100%."
+        ];
+        let lastMessageIndex = -1;
+        let typingInterval;
         function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
-        function showNextTerminalMessage() { const messageEl = document.getElementById('terminal-message'); if (!messageEl) return; const messageToShow = terminalMessages[currentMessageIndex]; typeMessage(messageEl, messageToShow); currentMessageIndex = (currentMessageIndex + 1) % terminalMessages.length; }
+        function showNextTerminalMessage() { 
+            const messageEl = document.getElementById('terminal-message'); 
+            if (!messageEl) return;
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * terminalMessages.length);
+            } while (randomIndex === lastMessageIndex && terminalMessages.length > 1);
+            lastMessageIndex = randomIndex;
+            const messageToShow = terminalMessages[randomIndex]; 
+            typeMessage(messageEl, messageToShow); 
+        }
+        // === KẾT THÚC NÂNG CẤP ===
 
         window.onload = async () => {
             updateClock();
@@ -87,11 +115,9 @@
             if (userData.success) {
                 document.getElementById('welcome-message').textContent = `Chào, ${userData.userInfo.username}!`;
                 
-                // === THAY ĐỔI: Lấy và hiển thị Token theo thương hiệu ===
                 const userCoinsByBrand = userData.userInfo.coins_by_brand || {};
                 const coinsForCurrentBrand = userCoinsByBrand[brandName] || 0;
                 document.getElementById('coin-display').textContent = `Token: ${coinsForCurrentBrand}`;
-                // =======================================================
             }
 
             const lobbyContainer = document.getElementById('lobby-container');
@@ -118,6 +144,17 @@
                 lobbyContainer.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #fff;">Admin chưa tạo sảnh game.</p>`
             }
         };
+    </script>
+    
+    <script>
+        const overlay = document.querySelector('.video-overlay');
+        if (overlay) {
+            window.addEventListener('mousemove', (e) => {
+                const { clientX, clientY } = e;
+                overlay.style.setProperty('--mouse-x', `${clientX}px`);
+                overlay.style.setProperty('--mouse-y', `${clientY}px`);
+            });
+        }
     </script>
 </body>
 </html>
