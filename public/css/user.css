@@ -135,11 +135,13 @@ body.analysis-page {
 }
 
 
+/* === THAY ĐỔI: Vô hiệu hóa header dính === */
 .header {
     background: rgba(10, 0, 0, 0.5);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: static; /* Ghi đè thuộc tính sticky, làm header đứng yên tại đỉnh trang */
 }
 
 /* ======================================================= */
@@ -231,7 +233,6 @@ body.analysis-page {
 
 /* PHẦN CÒN LẠI CỦA CSS GIỮ NGUYÊN */
 #background-video, #background-effects { display: none; }
-body.games-page, body.dashboard-page, body.brand-selection-page, body.analysis-page { overflow-y: auto; }
 @media (min-width: 769px) { main { max-width: 1000px; margin: 0 auto; } body.dashboard-page .grid-container { grid-template-columns: repeat(4, 1fr); gap: 25px; } }
 #welcome-message { color: #fff; font-weight: bold; font-size: 1.2em; font-family: 'Poppins', sans-serif; }
 .logout-button { background-color: transparent; border: none; color: #fff; padding: 5px 15px; border-radius: 50px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 0.9em; }
