@@ -296,6 +296,38 @@ app.post('/api/grant-coins-to-admin', async (req, res) => {
     }
 });
 
+// === THÊM MỚI: API ĐỂ THU HỒI TOKEN TỪ ADMIN ===
+app.post('/api/revoke-coins-from-admin', async (req, res) => {
+    try {
+        const { adminId, amount } = req.body;
+        const numAmount = parseInt(amount, 10);
+
+        if (isNaN(numAmount) || numAmount <= 0) {
+            return res.status(400).json({ success: false, message: "Số Token thu hồi phải là một số dương." });
+        }
+
+        const adminToUpdate = await User.findById(adminId);
+        if (!adminToUpdate || !adminToUpdate.is_admin || adminToUpdate.is_super_admin) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy tài khoản Admin phụ hợp lệ." });
+        }
+
+        // Trừ đi số Token và đảm bảo không bị âm
+        adminToUpdate.coins -= numAmount;
+        if (adminToUpdate.coins < 0) {
+            adminToUpdate.coins = 0;
+        }
+        
+        await adminToUpdate.save();
+        
+        res.json({ success: true, message: `Thu hồi ${numAmount} Token từ ${adminToUpdate.username} thành công. Số dư mới: ${adminToUpdate.coins}` });
+
+    } catch (error) {
+        console.error("Lỗi khi thu hồi Token:", error);
+        res.status(500).json({ success: false, message: "Lỗi server khi thu hồi Token." });
+    }
+});
+// ===================================================
+
 app.post('/api/delete-sub-admin', async (req, res) => {
     try {
         const { adminId } = req.body;

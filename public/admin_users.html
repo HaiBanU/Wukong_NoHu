@@ -40,6 +40,12 @@
          }
     </style>
 </head>
+<script>
+    // === BẮT BUỘC KIỂM TRA ĐĂNG NHẬP ===
+    if (!localStorage.getItem('username')) {
+        window.location.href = '/'; // Chuyển về trang đăng nhập
+    }
+</script>
 <body class="admin-page">
     <div id="toast-container"></div>
 

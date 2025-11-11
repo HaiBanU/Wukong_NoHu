@@ -8,6 +8,12 @@
     <link rel="stylesheet" href="/css/user.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+<script>
+    // === BẮT BUỘC KIỂM TRA ĐĂNG NHẬP ===
+    if (!localStorage.getItem('username')) {
+        window.location.href = '/'; // Chuyển về trang đăng nhập
+    }
+</script>
 <body class="dashboard-page">
     <video autoplay muted loop id="background-video">
         <source src="/assets/videos/space-bg.mp4" type="video/mp4">

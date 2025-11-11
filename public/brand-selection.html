@@ -9,6 +9,12 @@
     <link rel="stylesheet" href="/css/user.css"> 
     <link rel="stylesheet" href="/css/brand-selection-final.css">
 </head>
+<script>
+    // === BẮT BUỘC KIỂM TRA ĐĂNG NHẬP ===
+    if (!localStorage.getItem('username')) {
+        window.location.href = '/'; // Chuyển về trang đăng nhập
+    }
+</script>
 <body class="brand-selection-page">
     <video autoplay muted loop id="background-video">
         <source src="/assets/videos/space-bg.mp4" type="video/mp4">

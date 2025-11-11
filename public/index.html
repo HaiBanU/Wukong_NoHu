@@ -42,27 +42,22 @@
         </div>
     </div>
     <script>
-        // === BẮT ĐẦU: ĐOẠN MÃ TỰ ĐỘNG KIỂM TRA ĐĂNG NHẬP ===
-        // Chức năng: Tự động chuyển hướng người dùng nếu họ đã đăng nhập từ trước.
+        /* === SỬA LỖI: Đã đổi từ comment HTML thành comment JavaScript ===
+           Chức năng tự động đăng nhập đã bị tắt theo yêu cầu. 
+           Người dùng sẽ luôn thấy form đăng nhập.
+        
         (function kiemTraDangNhap() {
-            // Lấy thông tin đăng nhập đã lưu từ lần trước
             const daDangNhap = localStorage.getItem('username');
             const laAdmin = localStorage.getItem('adminId');
-
-            // Nếu có thông tin người dùng đã đăng nhập...
             if (daDangNhap) {
-                // ...thì kiểm tra xem có phải là admin không
                 if (laAdmin) {
-                    // Nếu là admin, chuyển thẳng đến trang quản trị
                     window.location.href = '/admin.html';
                 } else {
-                    // Nếu là người dùng thường, chuyển thẳng đến trang chọn thương hiệu
                     window.location.href = '/brand-selection.html';
                 }
             }
-            // Nếu không có thông tin đăng nhập, thì không làm gì cả, để form đăng nhập hiện ra.
         })();
-        // === KẾT THÚC: ĐOẠN MÃ TỰ ĐỘNG KIỂM TRA ĐĂNG NHẬP ===
+        */
 
 
         const loginForm = document.getElementById('login-form');
