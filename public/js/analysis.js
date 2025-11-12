@@ -119,9 +119,12 @@ window.onload = () => {
     }
 
     function displayResults(finalRate) {
-        const quayMoiVong = Math.floor(Math.random() * 51) + 50;
+        // === THAY ĐỔI TẠI ĐÂY: Chỉnh số vòng quay từ 20 đến 40 ===
+        const quayMoiVong = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
+        const quayAutoVong = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
+        // =========================================================
+
         const quayMoiMucCuoc = (Math.floor(Math.random() * 37) + 4);
-        const quayAutoVong = Math.floor(Math.random() * 51) + 30;
         const quayAutoMucCuoc = (Math.floor(Math.random() * 19) + 2);
         const now = new Date(); const future = new Date(now.getTime() + 30 * 60 * 1000);
         const formatTime = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;

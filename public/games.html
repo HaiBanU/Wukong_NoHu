@@ -102,128 +102,137 @@
     </div>
 
     <script>
-        function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
-        
-        // === NÂNG CẤP: Thêm nhiều thông báo hơn và hiển thị ngẫu nhiên ===
-        const terminalMessages = [ 
-            "Đang tải dữ liệu trò chơi...", 
-            "Phân tích tỷ lệ thắng/thua trong phiên.", 
-            "Chúc bạn may mắn!",
-            "Hệ thống gợi ý đã được kích hoạt.",
-            "Chọn một trò chơi để bắt đầu phân tích sâu.",
-            "Theo dõi các biến động bất thường...",
-            "Dữ liệu được làm mới liên tục.",
-            "Sẵn sàng thực hiện phân tích."
-        ];
-        let lastMessageIndex = -1;
-        let typingInterval;
-        function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
-        function showNextTerminalMessage() { 
-            const messageEl = document.getElementById('terminal-message'); 
-            if (!messageEl) return;
-            let randomIndex;
-            do {
-                randomIndex = Math.floor(Math.random() * terminalMessages.length);
-            } while (randomIndex === lastMessageIndex && terminalMessages.length > 1);
-            lastMessageIndex = randomIndex;
-            const messageToShow = terminalMessages[randomIndex]; 
-            typeMessage(messageEl, messageToShow); 
-        }
-        // === KẾT THÚC NÂNG CẤP ===
-
-        let allGames = [];
-        const gameContainer = document.getElementById('game-container');
-        
-        function renderGames(gamesToDisplay) {
-            gameContainer.innerHTML = ''; 
-            if (gamesToDisplay.length > 0) {
-                gamesToDisplay.forEach(game => {
-                    const card = document.createElement('div');
-                    card.className = 'game-card-enhanced';
-                    const colors = getColorScheme(game.winRate);
-                    card.innerHTML = `<div class="game-card-inner-frame"><div class="card-image-wrapper"><img src="${game.image_url}" alt="${game.name}"></div></div><div class="game-card-content"><div class="game-info"><h4 class="game-name">${game.name}</h4></div><div class="status-tag-wrapper"><span class="status-tag ${colors.className}">${colors.tag}</span></div><div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${game.winRate}%; background: ${colors.gradientColor};"></div></div><button class="action-button" style="background: ${colors.gradientColor};">${game.winRate}%</button></div>`;
-                    card.onclick = () => {
-                        const params = new URLSearchParams(window.location.search);
-                        const lobbyName = decodeURIComponent(params.get('lobby_name'));
-                        const url = `/analysis.html?gameName=${encodeURIComponent(game.name)}&imageUrl=${encodeURIComponent(game.image_url)}&winRate=${game.winRate}&lobbyName=${encodeURIComponent(lobbyName)}`;
-                        window.location.href = url;
-                    };
-                    gameContainer.appendChild(card);
+    function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
+    
+    // === THAY ĐỔI: Khởi tạo mảng rỗng ===
+    let terminalMessages = [];
+    
+    // Hàm tạo thông báo động từ dữ liệu game
+    function generateDynamicGameMessages(games, lobbyName) {
+        const dynamicMessages = [];
+        if (games && games.length > 0) {
+            const jackpotGames = games.filter(game => game.winRate > 85);
+            
+            if (jackpotGames.length > 0) {
+                dynamicMessages.push(`Cảnh báo! Phát hiện ${jackpotGames.length} tín hiệu Jackpot tại sảnh ${lobbyName}.`);
+                jackpotGames.forEach(game => {
+                    dynamicMessages.push(`Game "${game.name}" đang có tỷ lệ Nổ Hũ rất cao!`);
+                    dynamicMessages.push(`Hệ thống khuyến nghị tập trung vào game "${game.name}".`);
                 });
             } else {
-                gameContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #fff;">Không tìm thấy game nào phù hợp.</p>';
+                dynamicMessages.push(`Hiện chưa có game nào đạt tỷ lệ Jackpot tại sảnh ${lobbyName}.`);
+                dynamicMessages.push(`Hãy thử phân tích để tìm ra cơ hội tiềm ẩn.`);
             }
+        }
+         dynamicMessages.push("Dữ liệu được làm mới liên tục.");
+         dynamicMessages.push("Chọn một trò chơi để bắt đầu phân tích sâu.");
+        return dynamicMessages;
+    }
+
+    let lastMessageIndex = -1;
+    let typingInterval;
+    function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
+    function showNextTerminalMessage() { 
+        const messageEl = document.getElementById('terminal-message'); 
+        if (!messageEl || terminalMessages.length === 0) return;
+        let randomIndex;
+        do {
+            randomIndex = Math.floor(Math.random() * terminalMessages.length);
+        } while (randomIndex === lastMessageIndex && terminalMessages.length > 1);
+        lastMessageIndex = randomIndex;
+        const messageToShow = terminalMessages[randomIndex]; 
+        typeMessage(messageEl, messageToShow); 
+    }
+
+    let allGames = [];
+    const gameContainer = document.getElementById('game-container');
+    
+    function renderGames(gamesToDisplay) {
+        gameContainer.innerHTML = ''; 
+        if (gamesToDisplay.length > 0) {
+            gamesToDisplay.forEach(game => {
+                const card = document.createElement('div');
+                card.className = 'game-card-enhanced';
+                const colors = getColorScheme(game.winRate);
+                card.innerHTML = `<div class="game-card-inner-frame"><div class="card-image-wrapper"><img src="${game.image_url}" alt="${game.name}"></div></div><div class="game-card-content"><div class="game-info"><h4 class="game-name">${game.name}</h4></div><div class="status-tag-wrapper"><span class="status-tag ${colors.className}">${colors.tag}</span></div><div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${game.winRate}%; background: ${colors.gradientColor};"></div></div><button class="action-button" style="background: ${colors.gradientColor};">${game.winRate}%</button></div>`;
+                card.onclick = () => {
+                    const params = new URLSearchParams(window.location.search);
+                    const lobbyName = decodeURIComponent(params.get('lobby_name'));
+                    const url = `/analysis.html?gameName=${encodeURIComponent(game.name)}&imageUrl=${encodeURIComponent(game.image_url)}&winRate=${game.winRate}&lobbyName=${encodeURIComponent(lobbyName)}`;
+                    window.location.href = url;
+                };
+                gameContainer.appendChild(card);
+            });
+        } else {
+            gameContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #fff;">Không tìm thấy game nào phù hợp.</p>';
+        }
+    }
+    
+    window.onload = async () => {
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        const params = new URLSearchParams(window.location.search);
+        const lobbyId = params.get('lobby_id');
+        const lobbyName = decodeURIComponent(params.get('lobby_name'));
+        if (!lobbyId) { window.location.href = '/dashboard.html'; return; }
+
+        document.getElementById('lobby-title').textContent = lobbyName;
+        const response = await fetch(`/api/games-with-rates?lobby_id=${lobbyId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            allGames = data.games; 
+            
+            // === THAY ĐỔI: Gán trực tiếp, không nối mảng ===
+            const dynamicMessages = generateDynamicGameMessages(allGames, lobbyName);
+            terminalMessages = dynamicMessages;
+            // ============================================
+
+            renderGames(allGames); 
+        } else {
+            gameContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #fff;">Sảnh này chưa có game nào.</p>';
         }
         
-        window.onload = async () => {
-            updateClock();
-            setInterval(updateClock, 1000);
-            showNextTerminalMessage();
-            setInterval(showNextTerminalMessage, 10000);
+        showNextTerminalMessage();
+        setInterval(showNextTerminalMessage, 10000);
 
-            const params = new URLSearchParams(window.location.search);
-            const lobbyId = params.get('lobby_id');
-            const lobbyName = decodeURIComponent(params.get('lobby_name'));
-            if (!lobbyId) { window.location.href = '/dashboard.html'; return; }
+        const searchInput = document.getElementById('game-search-input');
+        const filterContainer = document.getElementById('filter-container');
+        let currentFilter = 'all';
+        let currentSearchTerm = '';
 
-            document.getElementById('lobby-title').textContent = lobbyName;
-            const response = await fetch(`/api/games-with-rates?lobby_id=${lobbyId}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                allGames = data.games; 
-                renderGames(allGames); 
-            } else {
-                gameContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #fff;">Sảnh này chưa có game nào.</p>';
+        function applyFiltersAndSearch() {
+            let filteredGames = [...allGames];
+            if (currentFilter === 'jackpot') {
+                filteredGames = filteredGames.filter(game => game.winRate > 85);
+            } else if (currentFilter === 'play') {
+                filteredGames = filteredGames.filter(game => game.winRate > 60 && game.winRate <= 85);
+            } else if (currentFilter === 'wait') {
+                filteredGames = filteredGames.filter(game => game.winRate <= 60);
             }
-
-            const searchInput = document.getElementById('game-search-input');
-            const filterContainer = document.getElementById('filter-container');
-            let currentFilter = 'all';
-            let currentSearchTerm = '';
-
-            function applyFiltersAndSearch() {
-                let filteredGames = [...allGames];
-                if (currentFilter === 'jackpot') {
-                    filteredGames = filteredGames.filter(game => game.winRate > 85);
-                } else if (currentFilter === 'play') {
-                    filteredGames = filteredGames.filter(game => game.winRate > 60 && game.winRate <= 85);
-                } else if (currentFilter === 'wait') {
-                    filteredGames = filteredGames.filter(game => game.winRate <= 60);
-                }
-                if (currentSearchTerm) {
-                    filteredGames = filteredGames.filter(game => game.name.toLowerCase().includes(currentSearchTerm));
-                }
-                renderGames(filteredGames);
+            if (currentSearchTerm) {
+                filteredGames = filteredGames.filter(game => game.name.toLowerCase().includes(currentSearchTerm));
             }
-
-            filterContainer.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON') {
-                    filterContainer.querySelector('.active').classList.remove('active');
-                    e.target.classList.add('active');
-                    currentFilter = e.target.dataset.filter;
-                    applyFiltersAndSearch();
-                }
-            });
-            
-            searchInput.addEventListener('input', (e) => {
-                currentSearchTerm = e.target.value.toLowerCase();
-                applyFiltersAndSearch();
-            });
-        };
-
-        function getColorScheme(rate) { if (rate > 85) return { className: 'tag-jackpot', tag: 'JACKPOT', gradientColor: 'linear-gradient(45deg, #00ff8c, #00b894)' }; else if (rate > 60) return { className: 'tag-play', tag: 'CHƠI', gradientColor: 'linear-gradient(45deg, #ffc62b, #ff8e00)' }; else return { className: 'tag-wait', tag: 'CHỜ', gradientColor: 'linear-gradient(45deg, #d90429, #ef233c)' }; }
-    </script>
-    
-    <script>
-        const overlay = document.querySelector('.video-overlay');
-        if (overlay) {
-            window.addEventListener('mousemove', (e) => {
-                const { clientX, clientY } = e;
-                overlay.style.setProperty('--mouse-x', `${clientX}px`);
-                overlay.style.setProperty('--mouse-y', `${clientY}px`);
-            });
+            renderGames(filteredGames);
         }
-    </script>
+
+        filterContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                filterContainer.querySelector('.active').classList.remove('active');
+                e.target.classList.add('active');
+                currentFilter = e.target.dataset.filter;
+                applyFiltersAndSearch();
+            }
+        });
+        
+        searchInput.addEventListener('input', (e) => {
+            currentSearchTerm = e.target.value.toLowerCase();
+            applyFiltersAndSearch();
+        });
+    };
+
+    function getColorScheme(rate) { if (rate > 85) return { className: 'tag-jackpot', tag: 'JACKPOT', gradientColor: 'linear-gradient(45deg, #00ff8c, #00b894)' }; else if (rate > 60) return { className: 'tag-play', tag: 'CHƠI', gradientColor: 'linear-gradient(45deg, #ffc62b, #ff8e00)' }; else return { className: 'tag-wait', tag: 'CHỜ', gradientColor: 'linear-gradient(45deg, #d90429, #ef233c)' }; }
+</script>
 </body>
 </html>
