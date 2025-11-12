@@ -18,7 +18,7 @@
             background-color: #fff;
         }
 
-        /* === CSS MỚI CHO BỐ CỤC THEO THƯƠNG HIỆU === */
+        /* === CSS MỚI CHO BỐ CỤC THEO SẢNH GAME === */
         .brand-group {
             margin-bottom: 30px;
             border: 1px solid #e0e0e0;
@@ -150,7 +150,7 @@
                 <div class="form-group"><input type="password" id="new-admin-password" placeholder="Mật khẩu" required></div>
                 <div class="form-group">
                     <select id="new-admin-brand" class="form-control" required>
-                        <option value="">-- Chọn thương hiệu quản lý --</option>
+                        <option value="">-- Chọn SẢNH GAME quản lý --</option>
                     </select>
                 </div>
                 <button type="submit" class="btn-primary">Tạo Tài Khoản</button>
@@ -216,7 +216,7 @@
                         selectEl.appendChild(option);
                     });
                 }
-            } catch(e) { console.error("Lỗi khi tải thương hiệu:", e); }
+            } catch(e) { console.error("Lỗi khi tải SẢNH GAME:", e); }
         }
 
         // HÀM QUAN TRỌNG: ĐÃ VIẾT LẠI HOÀN TOÀN
@@ -242,10 +242,10 @@
                     return acc;
                 }, {});
 
-                // Bước 2: Lấy danh sách các thương hiệu và sắp xếp
+                // Bước 2: Lấy danh sách các SẢNH GAME và sắp xếp
                 const sortedBrands = Object.keys(groupedAdmins).sort();
 
-                // Bước 3: Lặp qua từng nhóm thương hiệu đã sắp xếp và hiển thị
+                // Bước 3: Lặp qua từng nhóm SẢNH GAME đã sắp xếp và hiển thị
                 for (const brand of sortedBrands) {
                     const adminsInGroup = groupedAdmins[brand];
 
@@ -254,7 +254,7 @@
 
                     const brandHeader = document.createElement('div');
                     brandHeader.className = 'brand-header';
-                    brandHeader.textContent = `Thương hiệu: ${brand}`;
+                    brandHeader.textContent = `SẢNH GAME: ${brand}`;
                     brandGroup.appendChild(brandHeader);
 
                     adminsInGroup.forEach(admin => {

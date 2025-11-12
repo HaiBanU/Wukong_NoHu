@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -105,23 +107,42 @@
     <script>
         function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
         
-        // === NÂNG CẤP: Thêm nhiều thông báo hơn và hiển thị ngẫu nhiên ===
-        const terminalMessages = [ 
-            "Đang tải dữ liệu trò chơi...", 
-            "Phân tích tỷ lệ thắng/thua trong phiên.", 
-            "Chúc bạn may mắn!",
-            "Hệ thống gợi ý đã được kích hoạt.",
-            "Chọn một trò chơi để bắt đầu phân tích sâu.",
-            "Theo dõi các biến động bất thường...",
-            "Dữ liệu được làm mới liên tục.",
-            "Sẵn sàng thực hiện phân tích."
-        ];
+        // === NÂNG CẤP V4: HOÀN TOÀN MỚI NỘI DUNG TERMINAL ===
+        let terminalMessages = [];
         let lastMessageIndex = -1;
         let typingInterval;
+
+        function generateGameMessages(games = []) {
+            const messageTemplates = [
+                "Giải mã dữ liệu trò chơi trong sảnh đã chọn...",
+                "Đang phân tích chu kỳ và độ biến động của từng game.",
+                "Hệ thống gợi ý Jackpot đã được kích hoạt.",
+                "Cross-referencing historical data to identify patterns...",
+                "Lọc các game có tín hiệu 'chuẩn bị nhả thưởng'...",
+                "Chọn một trò chơi để tiến hành phân tích sâu bằng 4 Token.",
+                "Hãy nhớ, kiên nhẫn cũng là một chiến lược."
+            ];
+
+            if (games.length > 0) {
+                const jackpotGames = games.filter(game => game.winRate > 85);
+                if (jackpotGames.length > 0) {
+                    const bestGame = jackpotGames.sort((a, b) => b.winRate - a.winRate)[0];
+                    messageTemplates.push(`Cảnh báo Jackpot! Game "${bestGame.name}" đang có tỷ lệ nổ hũ ${bestGame.winRate}%.`);
+                    messageTemplates.push(`Phân tích cho thấy game "${bestGame.name}" là lựa chọn tốt nhất lúc này.`);
+                }
+                const playableGames = games.filter(game => game.winRate > 60 && game.winRate <= 85);
+                if (playableGames.length > 0) {
+                    const goodGame = playableGames[Math.floor(Math.random() * playableGames.length)];
+                    messageTemplates.push(`Game "${goodGame.name}" đang trong chu kỳ nhả thưởng, cân nhắc tham gia.`);
+                }
+            }
+            return messageTemplates;
+        }
+
         function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
         function showNextTerminalMessage() { 
             const messageEl = document.getElementById('terminal-message'); 
-            if (!messageEl) return;
+            if (!messageEl || terminalMessages.length === 0) return;
             let randomIndex;
             do {
                 randomIndex = Math.floor(Math.random() * terminalMessages.length);
@@ -159,9 +180,7 @@
         window.onload = async () => {
             updateClock();
             setInterval(updateClock, 1000);
-            showNextTerminalMessage();
-            setInterval(showNextTerminalMessage, 10000);
-
+            
             const params = new URLSearchParams(window.location.search);
             const lobbyId = params.get('lobby_id');
             const lobbyName = decodeURIComponent(params.get('lobby_name'));
@@ -174,6 +193,11 @@
             if (data.success) {
                 allGames = data.games; 
                 renderGames(allGames); 
+                
+                // Cập nhật và kích hoạt Terminal với dữ liệu mới
+                terminalMessages = generateGameMessages(allGames);
+                showNextTerminalMessage();
+                setInterval(showNextTerminalMessage, 10000);
             } else {
                 gameContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #fff;">Sảnh này chưa có game nào.</p>';
             }

@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -41,10 +43,10 @@
     </header>
 
     <main class="carousel-main-content fadeIn" style="animation-delay: 0.2s;">
-        <h2 class="main-title">CHỌN THƯƠNG HIỆU</h2>
+        <h2 class="main-title">CHỌN SẢNH GAME</h2>
         <div class="carousel-container">
             <div class="brand-slider" id="brand-slider">
-                <!-- Các thẻ thương hiệu sẽ được JavaScript chèn vào đây -->
+                <!-- Các thẻ SẢNH GAME sẽ được JavaScript chèn vào đây -->
             </div>
         </div>
         <div class="carousel-controls">
@@ -71,16 +73,16 @@
             updateClock();
             setInterval(updateClock, 1000);
             
-            // === NÂNG CẤP: Thêm nhiều thông báo hơn và hiển thị ngẫu nhiên ===
+            // === NÂNG CẤP V4: HOÀN TOÀN MỚI NỘI DUNG TERMINAL ===
             const terminalMessages = [ 
-                "Hệ thống đã sẵn sàng...", 
-                "Vui lòng chọn một thương hiệu để tiếp tục.", 
-                "Đang chờ lệnh của bạn, Chỉ Huy.",
-                "Xác thực danh tính người dùng... Thành công.",
-                "Tải dữ liệu thương hiệu từ máy chủ.",
-                "Tất cả các module đã được khởi chạy.",
-                "Kết nối an toàn đã được thiết lập.",
-                "Sẵn sàng để đồng bộ hóa dữ liệu."
+                "Khởi tạo Giao thức Wukong... Hoàn tất.",
+                "Xác thực danh tính Chỉ Huy... Thành công.",
+                "Đang tải danh sách các SẢNH GAME đối tác...",
+                "Tất cả module phân tích đã được nạp.",
+                "Kết nối an toàn tới máy chủ trung tâm đã được thiết lập.",
+                "Hiệu suất hệ thống: 100%. Sẵn sàng nhận lệnh.",
+                "Vui lòng chọn một mục tiêu để bắt đầu đồng bộ hóa dữ liệu.",
+                "Dữ liệu là chìa khóa. Hãy chọn đúng cánh cửa."
             ];
             let lastMessageIndex = -1;
             let typingInterval;
@@ -97,7 +99,7 @@
                 typeMessage(messageEl, messageToShow); 
             }
             showNextTerminalMessage();
-            setInterval(showNextTerminalMessage, 8000); // Hiển thị thông báo mới sau mỗi 8 giây
+            setInterval(showNextTerminalMessage, 8000);
             // === KẾT THÚC NÂNG CẤP ===
 
             const username = localStorage.getItem('username');

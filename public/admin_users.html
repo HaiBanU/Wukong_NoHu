@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -7,37 +9,57 @@
     <link rel="stylesheet" href="/css/admin.css">
     <style>
         .card { padding: 0; }
-        .user-item { display: grid; grid-template-columns: 1fr auto auto; gap: 15px; align-items: center; padding: 15px 20px; }
+        .user-item { 
+            display: grid; 
+            /* Cập nhật grid: Tên User | Thông tin Token | Các nút hành động */
+            grid-template-columns: minmax(150px, 1fr) auto auto; 
+            gap: 20px; 
+            align-items: center; 
+            padding: 15px 20px; 
+        }
         .user-item:not(:last-child) { border-bottom: 1px solid #e9ecef; }
         .user-name { font-weight: bold; color: #333; }
-        #manageTokensModal .modal-content { max-width: 500px; } /* Thu nhỏ modal */
-        #modal-title { font-size: 1.5em; margin-bottom: 20px; color: var(--primary-red); }
+        .user-token-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-self: end; /* Căn lề phải */
+        }
+        .user-token-display {
+            font-weight: 500;
+            background-color: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: #495057;
+            white-space: nowrap;
+        }
+        .token-update-form {
+            display: flex;
+            gap: 10px;
+        }
+        .token-update-form input {
+            width: 120px;
+            text-align: center;
+        }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .search-bar { width: 50%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
         .btn-danger { background: #dc3545; color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
-
-        /* === THÊM CSS cho modal mới === */
-        #single-token-updater {
+        
+        /* === THÊM MỚI: Style cho nút và nhóm nút hành động === */
+        .user-actions {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-            padding: 20px 0;
+            gap: 10px;
         }
-        #single-token-updater .form-control {
-            max-width: 200px;
-            text-align: center;
-            font-size: 1.2em;
+        .btn-warning { 
+            background: #ffc107; 
+            color: #212529; 
+            border: none; 
+            border-radius: 8px; 
+            padding: 8px 12px; 
+            cursor: pointer;
+            font-weight: 500;
         }
-        #single-token-updater button {
-            width: auto;
-            padding: 10px 30px;
-        }
-         #single-token-updater p {
-            margin: 0;
-            font-size: 1.1em;
-            color: #333;
-         }
+        .btn-warning:hover { background: #e0a800; }
     </style>
 </head>
 <script>
@@ -80,17 +102,6 @@
             <div id="modal-message" class="modal-alert"></div>
         </div>
     </div>
-
-    <div id="manageTokensModal" class="modal">
-        <div class="modal-content fadeIn">
-            <span class="close-btn" onclick="closeAllModals()">&times;</span>
-            <h2 id="modal-title">Quản lý Token</h2>
-            <!-- === THAY ĐỔI LỚN: Bỏ danh sách thương hiệu, thay bằng 1 form duy nhất === -->
-            <div id="single-token-updater">
-                <!-- Nội dung sẽ được JS chèn vào đây -->
-            </div>
-        </div>
-    </div>
     
     <script>
         const userListContainer = document.getElementById('user-list-container');
@@ -98,9 +109,8 @@
         const linkUserModal = document.getElementById('linkUserModal');
         const userSearchInput = document.getElementById('user-search-input');
         const linkUserForm = document.getElementById('link-user-form');
-        const manageTokensModal = document.getElementById('manageTokensModal');
         let currentUsers = [];
-        let adminAssignedBrand = null; // Biến mới để lưu thương hiệu của admin
+        let adminAssignedBrand = null;
 
         function showToast(message, isSuccess = true) {
             const container = document.getElementById('toast-container');
@@ -143,33 +153,9 @@
             showModalMessage('', true);
             linkUserModal.style.display = 'flex'; 
         }
-        
-        // === THAY ĐỔI LỚN: Hàm mở Modal quản lý Token ===
-        function openManageModal(userId) {
-            const user = currentUsers.find(u => u._id === userId);
-            if (!user) return;
-
-            if (!adminAssignedBrand && localStorage.getItem('isSuperAdmin') !== 'true') {
-                showToast("Tài khoản của bạn chưa được gán thương hiệu. Vui lòng liên hệ Super Admin.", false);
-                return;
-            }
-            document.getElementById('modal-title').textContent = `Cấp Token cho: ${user.username}`;
-            const updaterContainer = document.getElementById('single-token-updater');
-            
-            const userCoinsByBrand = user.coins_by_brand || {};
-            const currentCoins = userCoinsByBrand[adminAssignedBrand] || 0;
-
-            updaterContainer.innerHTML = `
-                <p>Thương hiệu quản lý: <strong>${adminAssignedBrand}</strong></p>
-                <input type="number" class="form-control" min="0" value="${currentCoins}" id="modal-coins-input">
-                <button class="btn-primary" onclick="updateCoins(event, '${user._id}')">Lưu & Cấp Token</button>
-            `;
-            manageTokensModal.style.display = 'flex';
-        }
 
         function closeAllModals() {
             linkUserModal.style.display = 'none';
-            manageTokensModal.style.display = 'none';
             linkUserForm.reset();
             showModalMessage('', true);
         }
@@ -190,11 +176,14 @@
                 const adminInfoData = await adminInfoRes.json();
                 if (adminInfoData.success) {
                     adminAssignedBrand = adminInfoData.userInfo.assigned_brand;
-                    document.getElementById('main-title').textContent = `Quản lý User - Thương hiệu: ${adminAssignedBrand || 'Chưa gán'}`;
+                    document.getElementById('main-title').textContent = `Quản lý User - SẢNH GAME: ${adminAssignedBrand || 'Chưa gán'}`;
                 } else {
                     alert("Không thể lấy thông tin Admin.");
                     return;
                 }
+            } else {
+                adminAssignedBrand = "SuperAdmin";
+                document.getElementById('main-title').textContent = `Quản lý User (Super Admin)`;
             }
 
             const userRes = await fetch(`/api/users?admin_id=${adminId}`);
@@ -216,12 +205,24 @@
                 return;
             }
             users.forEach(user => {
+                const userCoinsByBrand = user.coins_by_brand || {};
+                const currentCoins = userCoinsByBrand[adminAssignedBrand] || 0;
+
                 const item = document.createElement('div');
                 item.className = 'user-item';
                 item.innerHTML = `
                     <span class="user-name">${user.username}</span>
-                    <button class="btn-primary" style="width: auto; padding: 8px 15px;" onclick="openManageModal('${user._id}')">Quản Lý Token</button>
-                    <button class="btn-danger" onclick="deleteUser('${user._id}', '${user.username}')">Xóa</button>
+                    <div class="user-token-info">
+                        <span class="user-token-display" id="tokens-for-${user._id}">Token: ${currentCoins}</span>
+                        <div class="token-update-form">
+                            <input type="number" id="input-for-${user._id}" class="form-control" placeholder="+/- Token">
+                            <button class="btn-primary" style="padding: 8px 15px;" onclick="updateUserCoins(event, '${user._id}')">Lưu</button>
+                        </div>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn-warning" onclick="revokeAllCoins('${user._id}', '${user.username}')">Thu hồi hết</button>
+                        <button class="btn-danger" onclick="deleteUser('${user._id}', '${user.username}')">Xóa</button>
+                    </div>
                 `;
                 userListContainer.appendChild(item);
             });
@@ -263,37 +264,61 @@
             }
         });
 
-        // === THAY ĐỔI LỚN: Hàm cập nhật Token ===
-        async function updateCoins(event, userId) {
+        async function updateUserCoins(event, userId) {
             const button = event.target;
             button.classList.add('btn-loading');
             
-            const coinInput = document.getElementById('modal-coins-input');
+            const amountInput = document.getElementById(`input-for-${userId}`);
+            const amount = amountInput.value;
+            if (!amount) {
+                showToast("Vui lòng nhập số Token cần thay đổi.", false);
+                button.classList.remove('btn-loading');
+                return;
+            }
+
             const adminId = localStorage.getItem('adminId');
             try {
-                const response = await fetch('/api/update-coins', {
+                const response = await fetch('/api/add-coins-to-user', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId, coins: coinInput.value, adminId })
+                    body: JSON.stringify({ userId, amount, adminId })
                 });
                 const result = await response.json();
                 showToast(result.message, result.success);
                 
                 if (result.success) {
-                    button.classList.add('btn-success');
+                    const tokenDisplay = document.getElementById(`tokens-for-${userId}`);
+                    tokenDisplay.textContent = `Token: ${result.newTotal}`;
+                    amountInput.value = '';
                     fetchAdminInfo();
-                    const user = currentUsers.find(u => u._id === userId);
-                    if(user) {
-                        if (!user.coins_by_brand) user.coins_by_brand = {};
-                        user.coins_by_brand[adminAssignedBrand] = parseInt(coinInput.value, 10);
-                    }
                 }
             } catch (error) {
                 showToast('Lỗi kết nối máy chủ!', false);
             } finally {
-                setTimeout(() => {
-                    button.classList.remove('btn-loading', 'btn-success');
-                }, 1500);
+                button.classList.remove('btn-loading');
+            }
+        }
+
+        // === THÊM MỚI: Hàm thu hồi toàn bộ Token ===
+        async function revokeAllCoins(userId, username) {
+            if (confirm(`Bạn có chắc chắn muốn thu hồi TOÀN BỘ Token từ "${username}" không?`)) {
+                try {
+                    const adminId = localStorage.getItem('adminId');
+                    const response = await fetch('/api/revoke-all-coins-from-user', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId, adminId })
+                    });
+                    const result = await response.json();
+                    showToast(result.message, result.success);
+                    if (result.success) {
+                        // Cập nhật giao diện mà không cần tải lại trang
+                        document.getElementById(`tokens-for-${userId}`).textContent = 'Token: 0';
+                        fetchAdminInfo(); // Cập nhật lại số dư của Admin
+                    }
+                } catch (error) {
+                    showToast('Lỗi kết nối máy chủ!', false);
+                }
             }
         }
 
@@ -323,7 +348,7 @@
         });
         window.onload = initializePage;
         window.onclick = (event) => {
-            if (event.target == linkUserModal || event.target == manageTokensModal) {
+            if (event.target == linkUserModal) {
                 closeAllModals();
             }
         }

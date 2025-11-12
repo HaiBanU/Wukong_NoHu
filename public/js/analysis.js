@@ -26,7 +26,7 @@ window.onload = () => {
     const selectedBrand = sessionStorage.getItem('selectedBrand');
 
     if (!username || !gameName || !imageUrl || !lobbyName || !selectedBrand) { 
-        alert("Lỗi: Thiếu thông tin game, sảnh hoặc thương hiệu."); 
+        alert("Lỗi: Thiếu thông tin game, sảnh hoặc SẢNH GAME."); 
         window.location.href = '/dashboard.html'; 
         return; 
     }
