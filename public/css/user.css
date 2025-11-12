@@ -50,28 +50,35 @@ body.analysis-page {
     52% { transform: translate(0, 0); opacity: 0.5; }
 }
 
+/* === THAY ĐỔI: Nâng cấp hiệu ứng ánh sáng chuột rực rỡ hơn === */
 .video-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 2;
+    z-index: 2; /* Tăng z-index lên một chút */
     pointer-events: none;
     transition: background 0.1s linear;
     background: 
+        /* Lớp ánh sáng chính theo chuột, rực rỡ hơn */
         radial-gradient(
-            circle 400px at var(--mouse-x, 50%) var(--mouse-y, 50%),
-            rgba(255, 255, 255, 0.08),
-            transparent 80%
+            circle 500px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+            rgba(217, 4, 41, 0.2),  /* Màu đỏ đậm hơn và rõ hơn */
+            rgba(255, 195, 0, 0.1) 40%, /* Thêm một vầng sáng màu vàng */
+            transparent 65% /* Mờ dần ra xa */
         ),
+        /* Lớp nền tối màu giữ nguyên */
         linear-gradient(
             to top,
             rgba(120, 10, 10, 0.6) 0%,
             rgba(10, 0, 0, 0.8) 40%,
             transparent 60%
         );
+    mix-blend-mode: color-dodge; /* Thêm chế độ hòa trộn để ánh sáng đẹp hơn */
+    opacity: 0.8; /* Giảm độ trong suốt tổng thể một chút để không quá chói */
 }
+
 
 /* ======================================================= */
 /* === BẦU TRỜI SAO PARALLAX 3D (PHIÊN BẢN ĐÃ SỬA LỖI) === */
@@ -329,4 +336,26 @@ body:not(.login-page):not(.games-page) .header { display: flex; justify-content:
         display: none; /* Ẩn lớp phủ màu tối trên điện thoại */
     }
     /* === KẾT THÚC SỬA LỖI === */
+}
+
+/* ======================================================= */
+/* === BẮT ĐẦU: HIỆU ỨNG NỀN TINH VÂN MỚI === */
+/* ======================================================= */
+
+@keyframes move-dust {
+    from { background-position: 0 0; }
+    to { background-position: -10000px 5000px; } /* Di chuyển chéo một khoảng rất lớn */
+}
+
+#space-dust-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0; /* Nằm ngay trên nền đen */
+    pointer-events: none;
+    background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); /* Sử dụng một texture lặp lại */
+    opacity: 0.3;
+    animation: move-dust 200s linear infinite; /* Animation chạy rất chậm */
 }

@@ -16,6 +16,7 @@
 </script>
 <body class="dashboard-page">
     <div id="page-background"></div>
+    <div id="space-dust-overlay"></div>
     <div id="background-effects"></div>
     <div id="grid-overlay"></div>
 
@@ -56,107 +57,106 @@
         </div>
     </div>
 
-   <script>
-    document.querySelector('.logout-button').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
-    function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
-    
-    // === THAY ĐỔI: Khởi tạo mảng rỗng ===
-    let terminalMessages = []; 
-
-    // Hàm tạo thông báo động từ dữ liệu sảnh
-    function generateDynamicLobbyMessages(lobbies) {
-        const dynamicMessages = [];
-        if (lobbies && lobbies.length > 0) {
-            lobbies.forEach(lobby => {
-                dynamicMessages.push(`Phát hiện tín hiệu năng lượng cao tại sảnh ${lobby.name}...`);
-                dynamicMessages.push(`Gợi ý: Thử vận may tại sảnh ${lobby.name} ngay hôm nay.`);
-            });
+    <script>
+        document.querySelector('.logout-button').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
+        function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
+        
+        // === NÂNG CẤP: Thêm nhiều thông báo hơn và hiển thị ngẫu nhiên ===
+        const terminalMessages = [ 
+            "Đang quét các sảnh game khả dụng...", 
+            "Phân tích dữ liệu sảnh theo thời gian thực.", 
+            "Tối ưu hóa luồng dữ liệu đầu vào.",
+            "Chào mừng trở lại, Chỉ Huy.",
+            "Sẵn sàng nhận lệnh truy cập sảnh.",
+            "Tỷ lệ biến động đang được theo dõi.",
+            "Tất cả các hệ thống đều đang hoạt động.",
+            "Hiệu suất hệ thống: 100%."
+        ];
+        let lastMessageIndex = -1;
+        let typingInterval;
+        function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
+        function showNextTerminalMessage() { 
+            const messageEl = document.getElementById('terminal-message'); 
+            if (!messageEl) return;
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * terminalMessages.length);
+            } while (randomIndex === lastMessageIndex && terminalMessages.length > 1);
+            lastMessageIndex = randomIndex;
+            const messageToShow = terminalMessages[randomIndex]; 
+            typeMessage(messageEl, messageToShow); 
         }
-        // Thêm một vài thông báo chung nếu cần
-        dynamicMessages.push("Sẵn sàng nhận lệnh truy cập sảnh.");
-        dynamicMessages.push("Tỷ lệ biến động đang được theo dõi.");
-        return dynamicMessages;
-    }
-    
-    let lastMessageIndex = -1;
-    let typingInterval;
-    function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
-    function showNextTerminalMessage() { 
-        const messageEl = document.getElementById('terminal-message'); 
-        if (!messageEl || terminalMessages.length === 0) return;
-        let randomIndex;
-        do {
-            randomIndex = Math.floor(Math.random() * terminalMessages.length);
-        } while (randomIndex === lastMessageIndex && terminalMessages.length > 1);
-        lastMessageIndex = randomIndex;
-        const messageToShow = terminalMessages[randomIndex]; 
-        typeMessage(messageEl, messageToShow); 
-    }
+        // === KẾT THÚC NÂNG CẤP ===
 
-    window.onload = async () => {
-        updateClock();
-        setInterval(updateClock, 1000);
-        
-        const brandName = sessionStorage.getItem('selectedBrand');
-        
-        if (!brandName) {
-            alert("Lỗi: Vui lòng chọn một trang game.");
-            window.location.href = '/brand-selection.html';
-            return;
-        }
-        
-        document.getElementById('main-title-header').textContent = `SẢNH GAME CỦA ${brandName.toUpperCase()}`;
+        window.onload = async () => {
+            updateClock();
+            setInterval(updateClock, 1000);
+            showNextTerminalMessage();
+            setInterval(showNextTerminalMessage, 10000);
 
-        const username = localStorage.getItem('username');
-        if (!username) { window.location.href = '/'; return; }
-
-        const [userRes, lobbyRes] = await Promise.all([
-            fetch(`/api/user-info?username=${username}`),
-            fetch('/api/lobbies')
-        ]);
-        const userData = await userRes.json();
-        const lobbyData = await lobbyRes.json();
-
-        if (userData.success) {
-            document.getElementById('welcome-message').textContent = `Chào, ${userData.userInfo.username}!`;
+            const brandName = sessionStorage.getItem('selectedBrand');
             
-            const userCoinsByBrand = userData.userInfo.coins_by_brand || {};
-            const coinsForCurrentBrand = userCoinsByBrand[brandName] || 0;
-            document.getElementById('coin-display').textContent = `Token: ${coinsForCurrentBrand}`;
-        }
+            if (!brandName) {
+                alert("Lỗi: Vui lòng chọn một trang game.");
+                window.location.href = '/brand-selection.html';
+                return;
+            }
+            
+            document.getElementById('main-title-header').textContent = `SẢNH GAME CỦA ${brandName.toUpperCase()}`;
 
-        const lobbyContainer = document.getElementById('lobby-container');
-        lobbyContainer.innerHTML = '';
-        if (lobbyData.success && lobbyData.lobbies.length > 0) {
-            // === THAY ĐỔI: Gán trực tiếp, không nối mảng ===
-            const dynamicMessages = generateDynamicLobbyMessages(lobbyData.lobbies);
-            terminalMessages = dynamicMessages; 
-            // ===============================================
+            const username = localStorage.getItem('username');
+            if (!username) { window.location.href = '/'; return; }
 
-            lobbyData.lobbies.forEach(lobby => {
-                const card = document.createElement('a');
-                card.href = `/games.html?lobby_id=${lobby._id}&lobby_name=${encodeURIComponent(lobby.name)}`;
-                card.className = 'game-card-enhanced dashboard-lobby-card';
-                card.innerHTML = `
-                    <div class="game-card-inner-frame">
-                        <div class="card-image-wrapper">
-                            <img src="${lobby.logo_url}" alt="${lobby.name}">
+            const [userRes, lobbyRes] = await Promise.all([
+                fetch(`/api/user-info?username=${username}`),
+                fetch('/api/lobbies')
+            ]);
+            const userData = await userRes.json();
+            const lobbyData = await lobbyRes.json();
+
+            if (userData.success) {
+                document.getElementById('welcome-message').textContent = `Chào, ${userData.userInfo.username}!`;
+                
+                const userCoinsByBrand = userData.userInfo.coins_by_brand || {};
+                const coinsForCurrentBrand = userCoinsByBrand[brandName] || 0;
+                document.getElementById('coin-display').textContent = `Token: ${coinsForCurrentBrand}`;
+            }
+
+            const lobbyContainer = document.getElementById('lobby-container');
+            lobbyContainer.innerHTML = '';
+            if (lobbyData.success && lobbyData.lobbies.length > 0) {
+                lobbyData.lobbies.forEach(lobby => {
+                    const card = document.createElement('a');
+                    card.href = `/games.html?lobby_id=${lobby._id}&lobby_name=${encodeURIComponent(lobby.name)}`;
+                    card.className = 'game-card-enhanced dashboard-lobby-card';
+                    card.innerHTML = `
+                        <div class="game-card-inner-frame">
+                            <div class="card-image-wrapper">
+                                <img src="${lobby.logo_url}" alt="${lobby.name}">
+                            </div>
                         </div>
-                    </div>
-                    <div class="game-card-content">
-                        <button class="action-button" style="background: linear-gradient(45deg, #d90429, #ef233c); margin-top: auto;">
-                            ${lobby.name}
-                        </button>
-                    </div>`;
-                lobbyContainer.appendChild(card);
+                        <div class="game-card-content">
+                            <button class="action-button" style="background: linear-gradient(45deg, #d90429, #ef233c); margin-top: auto;">
+                                ${lobby.name}
+                            </button>
+                        </div>`;
+                    lobbyContainer.appendChild(card);
+                });
+            } else {
+                lobbyContainer.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #fff;">Admin chưa tạo sảnh game.</p>`
+            }
+        };
+    </script>
+    
+    <script>
+        const overlay = document.querySelector('.video-overlay');
+        if (overlay) {
+            window.addEventListener('mousemove', (e) => {
+                const { clientX, clientY } = e;
+                overlay.style.setProperty('--mouse-x', `${clientX}px`);
+                overlay.style.setProperty('--mouse-y', `${clientY}px`);
             });
-        } else {
-            lobbyContainer.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #fff;">Admin chưa tạo sảnh game.</p>`
         }
-        
-        showNextTerminalMessage();
-        setInterval(showNextTerminalMessage, 10000);
-    };
-</script>
+    </script>
 </body>
 </html>
