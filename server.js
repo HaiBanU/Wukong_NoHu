@@ -7,6 +7,7 @@ const path = require('path');
 const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cors = require('cors'); // <<< ĐÃ THÊM DÒNG NÀY
 require('dotenv').config();
 
 const app = express();
@@ -18,9 +19,14 @@ const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 // === CẬP NHẬT: Thêm QQ88 vào danh sách ===
 const gameBrands = [ { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' }, { name: 'AU88', logo: 'au88.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' } ];
 
+// ==========================================================
+// === CẤU HÌNH MIDDLEWARE (BAO GỒM CẢ CORS) ===
+// ==========================================================
+app.use(cors()); // <<< ĐÃ THÊM DÒNG NÀY ĐỂ CHO PHÉP EXTENSION TRUY CẬP
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+// ==========================================================
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
