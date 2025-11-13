@@ -1,5 +1,3 @@
-
-
 // --- PHẦN 1: KHAI BÁO VÀ THIẾT LẬP ---
 const express = require('express');
 const mongoose = require('mongoose');
@@ -17,7 +15,7 @@ const port = 3000;
 let lobbyRatesCache = {};
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
-const gameBrands = [ { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' } ];
+const gameBrands = [ { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' }, { name: 'AU88', logo: 'au88.png' }, { name: 'FLY88', logo: 'fly88.png' } ];
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -562,4 +560,4 @@ app.post('/api/analyze-game', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
-});
+})
