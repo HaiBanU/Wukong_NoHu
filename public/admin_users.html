@@ -9,7 +9,6 @@
         .card { padding: 0; }
         .user-item { 
             display: grid; 
-            /* Cập nhật grid: Tên User | Thông tin Token | Các nút hành động */
             grid-template-columns: minmax(150px, 1fr) auto auto; 
             gap: 20px; 
             align-items: center; 
@@ -21,7 +20,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            justify-self: end; /* Căn lề phải */
+            justify-self: end;
         }
         .user-token-display {
             font-weight: 500;
@@ -43,7 +42,6 @@
         .search-bar { width: 50%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
         .btn-danger { background: #dc3545; color: white; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
         
-        /* === THÊM MỚI: Style cho nút và nhóm nút hành động === */
         .user-actions {
             display: flex;
             gap: 10px;
@@ -61,9 +59,8 @@
     </style>
 </head>
 <script>
-    // === BẮT BUỘC KIỂM TRA ĐĂNG NHẬP ===
     if (!localStorage.getItem('username')) {
-        window.location.href = '/'; // Chuyển về trang đăng nhập
+        window.location.href = '/';
     }
 </script>
 <body class="admin-page">
@@ -180,7 +177,7 @@
                     return;
                 }
             } else {
-                adminAssignedBrand = "SuperAdmin";
+                adminAssignedBrand = "SuperAdmin"; // Super Admin có thể quản lý token ở mọi sảnh
                 document.getElementById('main-title').textContent = `Quản lý User (Super Admin)`;
             }
 
@@ -199,11 +196,12 @@
         function renderUsers(users) {
             userListContainer.innerHTML = '';
              if (users.length === 0) {
-                userListContainer.innerHTML = '<div style="padding: 20px; text-align:center; color: var(--text-light);">Không có người dùng nào.</div>';
+                userListContainer.innerHTML = '<div style="padding: 20px; text-align:center; color: var(--text-light);">Không có người dùng nào. Hãy thêm tài khoản để bắt đầu quản lý.</div>';
                 return;
             }
             users.forEach(user => {
                 const userCoinsByBrand = user.coins_by_brand || {};
+                // Admin chỉ thấy và thao tác được với token của sảnh mình quản lý
                 const currentCoins = userCoinsByBrand[adminAssignedBrand] || 0;
 
                 const item = document.createElement('div');
@@ -248,10 +246,8 @@
                 const result = await response.json();
                 if (result.success) {
                     showToast(result.message, true);
-                    setTimeout(() => {
-                        closeAllModals();
-                        initializePage();
-                    }, 1000);
+                    closeAllModals();
+                    initializePage(); // Tải lại danh sách để user mới hiện ra
                 } else {
                     showModalMessage(result.message, false);
                 }
@@ -265,7 +261,6 @@
         async function updateUserCoins(event, userId) {
             const button = event.target;
             button.classList.add('btn-loading');
-            
             const amountInput = document.getElementById(`input-for-${userId}`);
             const amount = amountInput.value;
             if (!amount) {
@@ -273,7 +268,6 @@
                 button.classList.remove('btn-loading');
                 return;
             }
-
             const adminId = localStorage.getItem('adminId');
             try {
                 const response = await fetch('/api/add-coins-to-user', {
@@ -283,7 +277,6 @@
                 });
                 const result = await response.json();
                 showToast(result.message, result.success);
-                
                 if (result.success) {
                     const tokenDisplay = document.getElementById(`tokens-for-${userId}`);
                     tokenDisplay.textContent = `Token: ${result.newTotal}`;
@@ -298,7 +291,7 @@
         }
 
         async function revokeAllCoins(userId, username) {
-            if (confirm(`Bạn có chắc chắn muốn thu hồi TOÀN BỘ Token từ "${username}" không?`)) {
+            if (confirm(`Bạn có chắc chắn muốn thu hồi TOÀN BỘ Token tại sảnh ${adminAssignedBrand} từ "${username}" không?`)) {
                 try {
                     const adminId = localStorage.getItem('adminId');
                     const response = await fetch('/api/revoke-all-coins-from-user', {
@@ -318,12 +311,9 @@
             }
         }
 
-        // ===================================================================
-        // === BẮT ĐẦU THAY ĐỔI HỘP THOẠI XÁC NHẬN ===
-        // ===================================================================
+        // === CẬP NHẬT: Hộp thoại xác nhận cho hành động "xóa liên kết" ===
         async function deleteUser(userId, username) {
-            // THAY ĐỔI: Cập nhật lại câu thoại xác nhận cho phù hợp với logic mới
-            if (confirm(`Bạn có chắc chắn muốn gỡ quyền quản lý khỏi tài khoản "${username}" không? User sẽ không bị xóa mà chỉ bị gỡ khỏi danh sách của bạn.`)) {
+            if (confirm(`Bạn có chắc chắn muốn xóa tài khoản "${username}" khỏi danh sách quản lý của mình không?`)) {
                 try {
                     const adminId = localStorage.getItem('adminId');
                     const response = await fetch('/api/delete-user', {
@@ -334,16 +324,13 @@
                     const result = await response.json();
                     showToast(result.message, result.success);
                     if (result.success) {
-                        initializePage(); // Tải lại danh sách user sau khi gỡ
+                        initializePage();
                     }
                 } catch (error) {
                     showToast('Lỗi kết nối máy chủ!', false);
                 }
             }
         }
-        // ===================================================================
-        // === KẾT THÚC THAY ĐỔI HỘP THOẠI XÁC NHẬN ===
-        // ===================================================================
 
         document.querySelector('.logout-button').addEventListener('click', () => {
             localStorage.clear();

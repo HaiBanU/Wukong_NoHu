@@ -10,9 +10,8 @@
     <link rel="stylesheet" href="/css/brand-selection-final.css">
 </head>
 <script>
-    // === BẮT BUỘC KIỂM TRA ĐĂNG NHẬP ===
     if (!localStorage.getItem('username')) {
-        window.location.href = '/'; // Chuyển về trang đăng nhập
+        window.location.href = '/';
     }
 </script>
 <body class="brand-selection-page">
@@ -44,7 +43,6 @@
         <h2 class="main-title">CHỌN SẢNH GAME</h2>
         <div class="carousel-container">
             <div class="brand-slider" id="brand-slider">
-                <!-- Các thẻ SẢNH GAME sẽ được JavaScript chèn vào đây -->
             </div>
         </div>
         <div class="carousel-controls">
@@ -65,13 +63,13 @@
         document.querySelector('.logout-button').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
         function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
         
-        const gameBrands = [ { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' }, { name: 'AU88', logo: 'au88.png' }, { name: 'FLY88', logo: 'fly88.png' } ];
+        // === CẬP NHẬT: Thêm QQ88 vào danh sách ===
+        const gameBrands = [ { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' }, { name: 'AU88', logo: 'au88.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' } ];
 
         window.onload = async () => {
             updateClock();
             setInterval(updateClock, 1000);
             
-            // === NÂNG CẤP V4: HOÀN TOÀN MỚI NỘI DUNG TERMINAL ===
             const terminalMessages = [ 
                 "Khởi tạo Giao thức Wukong... Hoàn tất.",
                 "Xác thực danh tính Chỉ Huy... Thành công.",
@@ -98,7 +96,6 @@
             }
             showNextTerminalMessage();
             setInterval(showNextTerminalMessage, 8000);
-            // === KẾT THÚC NÂNG CẤP ===
 
             const username = localStorage.getItem('username');
             if (!username) { window.location.href = '/'; return; }
