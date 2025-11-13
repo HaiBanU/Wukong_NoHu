@@ -192,17 +192,34 @@ app.post('/api/link-user', async (req, res) => {
     }
 });
 
+// ===================================================================
+// === BẮT ĐẦU THAY ĐỔI LOGIC XÓA USER ===
+// ===================================================================
 app.post('/api/delete-user', async (req, res) => {
     try {
         const { userId, adminId } = req.body;
         if (!userId || !adminId) return res.status(400).json({ success: false, message: "Thiếu thông tin." });
-        const result = await User.deleteOne({ _id: userId, managed_by_admin_id: adminId });
-        if (result.deletedCount === 0) return res.status(403).json({ success: false, message: "Không có quyền xóa user này hoặc user không tồn tại." });
-        res.json({ success: true, message: "Xóa người dùng thành công!" });
+
+        // THAY ĐỔI: Từ deleteOne thành updateOne để gỡ liên kết
+        const result = await User.updateOne(
+            { _id: userId, managed_by_admin_id: adminId }, // Điều kiện: Phải là user này VÀ đang được admin này quản lý
+            { $set: { managed_by_admin_id: null } }       // Hành động: Đặt người quản lý về null
+        );
+
+        // THAY ĐỔI: Kiểm tra modifiedCount thay vì deletedCount
+        if (result.modifiedCount === 0) {
+            return res.status(403).json({ success: false, message: "Không có quyền gỡ user này hoặc user không tồn tại." });
+        }
+
+        // THAY ĐỔI: Cập nhật lại thông báo thành công
+        res.json({ success: true, message: "Gỡ quyền quản lý người dùng thành công!" });
     } catch (error) {
         res.status(500).json({ success: false, message: "Lỗi server." });
     }
 });
+// ===================================================================
+// === KẾT THÚC THAY ĐỔI LOGIC XÓA USER ===
+// ===================================================================
 
 // API CŨ: Đặt giá trị token tuyệt đối (giữ lại phòng trường hợp cần)
 app.post('/api/update-coins', async (req, res) => {
@@ -560,4 +577,4 @@ app.post('/api/analyze-game', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
-})
+});

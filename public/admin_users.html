@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -299,7 +297,6 @@
             }
         }
 
-        // === THÊM MỚI: Hàm thu hồi toàn bộ Token ===
         async function revokeAllCoins(userId, username) {
             if (confirm(`Bạn có chắc chắn muốn thu hồi TOÀN BỘ Token từ "${username}" không?`)) {
                 try {
@@ -312,9 +309,8 @@
                     const result = await response.json();
                     showToast(result.message, result.success);
                     if (result.success) {
-                        // Cập nhật giao diện mà không cần tải lại trang
                         document.getElementById(`tokens-for-${userId}`).textContent = 'Token: 0';
-                        fetchAdminInfo(); // Cập nhật lại số dư của Admin
+                        fetchAdminInfo();
                     }
                 } catch (error) {
                     showToast('Lỗi kết nối máy chủ!', false);
@@ -322,8 +318,12 @@
             }
         }
 
+        // ===================================================================
+        // === BẮT ĐẦU THAY ĐỔI HỘP THOẠI XÁC NHẬN ===
+        // ===================================================================
         async function deleteUser(userId, username) {
-            if (confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${username}" không? Hành động này không thể hoàn tác.`)) {
+            // THAY ĐỔI: Cập nhật lại câu thoại xác nhận cho phù hợp với logic mới
+            if (confirm(`Bạn có chắc chắn muốn gỡ quyền quản lý khỏi tài khoản "${username}" không? User sẽ không bị xóa mà chỉ bị gỡ khỏi danh sách của bạn.`)) {
                 try {
                     const adminId = localStorage.getItem('adminId');
                     const response = await fetch('/api/delete-user', {
@@ -334,13 +334,16 @@
                     const result = await response.json();
                     showToast(result.message, result.success);
                     if (result.success) {
-                        initializePage();
+                        initializePage(); // Tải lại danh sách user sau khi gỡ
                     }
                 } catch (error) {
                     showToast('Lỗi kết nối máy chủ!', false);
                 }
             }
         }
+        // ===================================================================
+        // === KẾT THÚC THAY ĐỔI HỘP THOẠI XÁC NHẬN ===
+        // ===================================================================
 
         document.querySelector('.logout-button').addEventListener('click', () => {
             localStorage.clear();
