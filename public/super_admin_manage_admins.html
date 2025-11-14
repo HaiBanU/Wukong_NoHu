@@ -132,7 +132,6 @@
 
     <main class="fadeIn" style="animation-delay: 0.2s;">
         <div class="page-header">
-            <!-- === THAY ĐỔI: Thêm span để hiển thị tổng số admin === -->
             <h2 style="margin-top:0;">Quản Lý Admin Phụ <span id="admin-count-display" class="admin-count-badge">...</span></h2>
             <button class="btn-primary" style="width: auto; padding: 12px 20px;" onclick="openCreateAdminModal()">+ Tạo Admin Mới</button>
         </div>
@@ -187,18 +186,16 @@
             showModalMessage('', true);
         }
         
-        // HÀM MỚI: Tính toán số ngày kể từ một ngày cho trước
         function calculateDaysSince(dateString) {
             const creationDate = new Date(dateString);
             const today = new Date();
-            // Bỏ qua phần giờ, phút, giây để so sánh ngày
             creationDate.setHours(0, 0, 0, 0);
             today.setHours(0, 0, 0, 0);
             
             const differenceInTime = today.getTime() - creationDate.getTime();
             const differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24));
             
-            if (differenceInDays < 0) return 'Tương lai'; // Trường hợp lỗi
+            if (differenceInDays < 0) return 'Tương lai';
             if (differenceInDays === 0) return 'Hôm nay';
             return `${differenceInDays} ngày`;
         }
@@ -219,39 +216,38 @@
             } catch(e) { console.error("Lỗi khi tải SẢNH GAME:", e); }
         }
 
-        // HÀM QUAN TRỌNG: ĐÃ VIẾT LẠI HOÀN TOÀN
+        // === CẬP NHẬT: Lấy danh sách Admin theo ID của Super Admin hiện tại ===
         async function fetchAndDisplayAdmins() {
-            const response = await fetch('/api/sub-admins');
-            const data = await response.json();
-            adminListContainer.innerHTML = ''; // Xóa nội dung cũ
+            // <<< Lấy ID của super admin đang đăng nhập từ localStorage
+            const creatorId = localStorage.getItem('adminId');
+            if (!creatorId) {
+                adminListContainer.innerHTML = '<p style="text-align:center; color: red;">Lỗi: Không tìm thấy ID của Super Admin.</p>';
+                return;
+            }
 
-            // === THÊM MỚI: Cập nhật bộ đếm tổng số admin ===
+            // <<< Gửi ID này lên server để lọc
+            const response = await fetch(`/api/sub-admins?creator_id=${creatorId}`);
+            const data = await response.json();
+            adminListContainer.innerHTML = ''; 
+
             if (data.success) {
                 document.getElementById('admin-count-display').textContent = `Tổng: ${data.admins.length}`;
             }
-            // ===============================================
 
             if (data.success && data.admins.length > 0) {
-                // Bước 1: Nhóm các admin theo 'assigned_brand'
                 const groupedAdmins = data.admins.reduce((acc, admin) => {
                     const brand = admin.assigned_brand || 'Chưa Phân Loại';
-                    if (!acc[brand]) {
-                        acc[brand] = [];
-                    }
+                    if (!acc[brand]) { acc[brand] = []; }
                     acc[brand].push(admin);
                     return acc;
                 }, {});
 
-                // Bước 2: Lấy danh sách các SẢNH GAME và sắp xếp
                 const sortedBrands = Object.keys(groupedAdmins).sort();
 
-                // Bước 3: Lặp qua từng nhóm SẢNH GAME đã sắp xếp và hiển thị
                 for (const brand of sortedBrands) {
                     const adminsInGroup = groupedAdmins[brand];
-
                     const brandGroup = document.createElement('div');
                     brandGroup.className = 'brand-group';
-
                     const brandHeader = document.createElement('div');
                     brandHeader.className = 'brand-header';
                     brandHeader.textContent = `SẢNH GAME: ${brand}`;
@@ -260,11 +256,9 @@
                     adminsInGroup.forEach(admin => {
                         const item = document.createElement('div');
                         item.className = 'admin-item';
-                        
                         const creationDate = new Date(admin.createdAt).toLocaleDateString('vi-VN');
                         const daysActive = calculateDaysSince(admin.createdAt);
                         
-                        // === THAY ĐỔI: Thêm nút "Thu hồi" và sửa placeholder ===
                         item.innerHTML = `
                             <div class="admin-details">
                                 <div class="admin-main-info">
@@ -286,26 +280,28 @@
                         `;
                         brandGroup.appendChild(item);
                     });
-                    
                     adminListContainer.appendChild(brandGroup);
                 }
-
             } else {
-                adminListContainer.innerHTML = '<p style="text-align:center; color: var(--text-light);">Chưa có Admin phụ nào.</p>';
+                adminListContainer.innerHTML = '<p style="text-align:center; color: var(--text-light);">Bạn chưa tạo Admin phụ nào.</p>';
             }
         }
         
+        // === CẬP NHẬT: Gửi ID của Super Admin khi tạo Admin phụ mới ===
         createAdminForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             showModalMessage('Đang xử lý...', true);
             const username = document.getElementById('new-admin-username').value;
             const password = document.getElementById('new-admin-password').value;
             const brandName = document.getElementById('new-admin-brand').value;
-            
+            // <<< Lấy ID của super admin đang đăng nhập từ localStorage
+            const creatorId = localStorage.getItem('adminId');
+
             const response = await fetch('/api/create-sub-admin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, brandName })
+                // <<< Gửi thêm creatorId trong body của request
+                body: JSON.stringify({ username, password, brandName, creatorId })
             });
             const result = await response.json();
             
@@ -317,6 +313,7 @@
             }
         });
 
+        // ... (Các hàm grantCoins, revokeCoins, deleteAdmin không đổi) ...
         async function grantCoins(adminId) {
             const amountInput = document.getElementById(`coins-for-${adminId}`);
             if (!amountInput.value) {
@@ -336,7 +333,6 @@
             }
         }
 
-        // === THÊM MỚI: Hàm để thu hồi Token ===
         async function revokeCoins(adminId, username) {
             const amountInput = document.getElementById(`coins-for-${adminId}`);
             const amount = amountInput.value;
@@ -359,7 +355,6 @@
                 }
             }
         }
-        // =======================================
         
         async function deleteAdmin(adminId, username) {
             if (confirm(`Bạn có chắc chắn muốn XÓA vĩnh viễn Admin "${username}" không? Toàn bộ user do admin này quản lý sẽ bị gỡ.`)) {
