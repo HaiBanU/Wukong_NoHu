@@ -32,9 +32,29 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+// --- ĐOẠN MÃ MỚI TỐI ƯU ---
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: { folder: 'troll_tool', allowedFormats: ['jpeg', 'png', 'jpg', 'gif'] },
+    params: {
+        folder: 'troll_tool',
+        allowedFormats: ['jpeg', 'png', 'jpg', 'gif'],
+        // Thêm các tùy chọn biến đổi tự động tại đây
+        transformation: [
+            {
+                // Giới hạn chiều rộng tối đa là 800px, chiều cao tự động theo tỷ lệ
+                width: 800, 
+                crop: "limit" 
+            },
+            {
+                // Yêu cầu Cloudinary tự động chọn định dạng ảnh tốt nhất (ví dụ: .webp)
+                fetch_format: "auto"
+            },
+            {
+                // Yêu cầu Cloudinary tự động chọn chất lượng ảnh tốt nhất để giảm dung lượng
+                quality: "auto"
+            }
+        ]
+    },
 });
 const upload = multer({ storage: storage });
 
