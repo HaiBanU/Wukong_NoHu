@@ -151,16 +151,16 @@
                     card.href = `/games.html?lobby_id=${lobby._id}&lobby_name=${encodeURIComponent(lobby.name)}`;
                     card.className = 'game-card-enhanced dashboard-lobby-card';
                     card.innerHTML = `
-                        <div class="game-card-inner-frame">
-                            <div class="card-image-wrapper">
-                                <img src="${lobby.logo_url}" alt="${lobby.name}">
-                            </div>
-                        </div>
-                        <div class="game-card-content">
-                            <button class="action-button" style="background: linear-gradient(45deg, #d90429, #ef233c); margin-top: auto;">
-                                ${lobby.name}
-                            </button>
-                        </div>`;
+    <div class="game-card-inner-frame">
+        <div class="card-image-wrapper">
+            <img src="${lobby.logo_url}" alt="${lobby.name}" loading="lazy">
+        </div>
+    </div>
+    <div class="game-card-content">
+        <button class="action-button" style="background: linear-gradient(45deg, #d90429, #ef233c); margin-top: auto;">
+            ${lobby.name}
+        </button>
+    </div>`;
                     lobbyContainer.appendChild(card);
                 });
             } else {

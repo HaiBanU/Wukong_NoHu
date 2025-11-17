@@ -144,15 +144,15 @@
                 
                 // Sử dụng mảng ĐÃ SẮP XẾP để tạo HTML
                 slider.innerHTML = sortedGameBrands.map(brand => `
-                    <div class="brand-card" data-brand-name="${brand.name}">
-                        <div class="brand-card-inner">
-                             <div class="logo-background">
-                                <img class="brand-logo" src="/assets/logos/${brand.logo}" alt="${brand.name}">
-                            </div>
-                            <div class="brand-name">${brand.name}</div>
-                        </div>
-                    </div>`
-                ).join('');
+    <div class="brand-card" data-brand-name="${brand.name}">
+        <div class="brand-card-inner">
+             <div class="logo-background">
+                <img class="brand-logo" src="/assets/logos/${brand.logo}" alt="${brand.name}">
+            </div>
+            <div class="brand-name">${brand.name}</div>
+        </div>
+    </div>`
+).join('');
 
                 const cards = document.querySelectorAll('.brand-card');
                 

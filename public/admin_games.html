@@ -102,10 +102,10 @@
                     cardLink.className = 'card';
                     cardLink.dataset.id = lobby._id;
                     cardLink.innerHTML = `
-                        <h3>${lobby.name}</h3>
-                        <img src="${lobby.logo_url}" style="width: 100px; height: 50px; object-fit: contain;">
-                        <p style="margin-top: 10px; font-size: 0.8em; color: #888;">Nhấn để quản lý game</p>
-                    `;
+    <h3>${lobby.name}</h3>
+    <img src="${lobby.logo_url}" style="width: 100px; height: 50px; object-fit: contain;" loading="lazy">
+    <p style="margin-top: 10px; font-size: 0.8em; color: #888;">Nhấn để quản lý game</p>
+`;
                     lobbyContainer.appendChild(cardLink);
                 });
                 if (!sortableInstance) {
