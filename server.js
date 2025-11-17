@@ -1,3 +1,5 @@
+// --- START OF FILE server.js ---
+
 // --- PHẦN 1: KHAI BÁO VÀ THIẾT LẬP ---
 const express = require('express');
 const mongoose = require('mongoose');
@@ -16,22 +18,8 @@ const port = 3000;
 let lobbyRatesCache = {};
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
-const gameBrands = [
-    { name: 'AU88', logo: 'au88.png' },
-    { name: 'MB66', logo: 'mb66.png' },
-    { name: 'MM88', logo: 'mm88.png' },
-    { name: 'RR88', logo: 'rr88.png' },
-    { name: 'XX88', logo: 'xx88.png' },
-    { name: 'QH88', logo: 'qh88.png' },
-    { name: 'F8BET', logo: 'f8bet.png' },
-    { name: 'SHBET', logo: 'shbet.png' },
-    { name: '188BET', logo: '188bet.png' },
-    { name: 'W88', logo: 'w88.png' },
-    { name: '788WIN', logo: '788win.png' },
-    { name: 'BK88', logo: 'bk88.png' },
-    { name: 'FLY88', logo: 'fly88.png' },
-    { name: 'QQ88', logo: 'qq88.png' }
-];
+// <<< ĐÃ SẮP XẾP LẠI THỨ TỰ SẢNH GAME >>>
+const gameBrands = [ { name: 'AU88', logo: 'au88.png' }, { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' } ];
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -206,6 +194,38 @@ app.get('/api/users', async (req, res) => {
         res.status(500).json({ success: false, message: "Lỗi server" });
     }
 });
+
+// <<< BẮT ĐẦU: API MỚI ĐƯỢC THÊM VÀO >>>
+app.get('/api/user-brand-priority', async (req, res) => {
+    try {
+        const { username } = req.query;
+        if (!username) {
+            return res.status(400).json({ success: false, message: "Thiếu tên người dùng." });
+        }
+
+        // Tìm người dùng và sử dụng .populate() để lấy thông tin chi tiết của các admin quản lý
+        // Chúng ta chỉ cần lấy trường 'assigned_brand' từ các admin đó
+        const user = await User.findOne({ username }).populate('managed_by_admin_ids', 'assigned_brand');
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
+        }
+
+        // Lọc ra danh sách các sảnh game từ thông tin admin
+        const priorityBrands = user.managed_by_admin_ids
+            .map(admin => admin.assigned_brand) // Lấy tên sảnh từ mỗi admin
+            .filter(brand => brand); // Loại bỏ các giá trị null hoặc undefined nếu có
+
+        // Sử dụng Set để loại bỏ các sảnh trùng lặp, sau đó chuyển lại thành mảng
+        const uniquePriorityBrands = [...new Set(priorityBrands)];
+
+        res.json({ success: true, priorityBrands: uniquePriorityBrands });
+    } catch (error) {
+        console.error("Lỗi khi lấy sảnh ưu tiên của user:", error);
+        res.status(500).json({ success: false, message: "Lỗi server." });
+    }
+});
+// <<< KẾT THÚC: API MỚI ĐƯỢC THÊM VÀO >>>
 
 app.post('/api/link-user', async (req, res) => {
     try {

@@ -63,24 +63,10 @@
         document.querySelector('.logout-button').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
         function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
         
-        // === CẬP NHẬT: Thêm QQ88 vào danh sách ===
-        const gameBrands = [
-    { name: 'AU88', logo: 'au88.png' },
-    { name: 'MB66', logo: 'mb66.png' },
-    { name: 'MM88', logo: 'mm88.png' },
-    { name: 'RR88', logo: 'rr88.png' },
-    { name: 'XX88', logo: 'xx88.png' },
-    { name: 'QH88', logo: 'qh88.png' },
-    { name: 'F8BET', logo: 'f8bet.png' },
-    { name: 'SHBET', logo: 'shbet.png' },
-    { name: '188BET', logo: '188bet.png' },
-    { name: 'W88', logo: 'w88.png' },
-    { name: '788WIN', logo: '788win.png' },
-    { name: 'BK88', logo: 'bk88.png' },
-    { name: 'FLY88', logo: 'fly88.png' },
-    { name: 'QQ88', logo: 'qq88.png' }
-];
+        // <<< ĐÃ SẮP XẾP LẠI THỨ TỰ SẢNH GAME >>>
+        const gameBrands = [ { name: 'AU88', logo: 'au88.png' }, { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' } ];
 
+        // <<< BẮT ĐẦU: TOÀN BỘ HÀM window.onload ĐÃ ĐƯỢC CẬP NHẬT >>>
         window.onload = async () => {
             updateClock();
             setInterval(updateClock, 1000);
@@ -114,62 +100,99 @@
 
             const username = localStorage.getItem('username');
             if (!username) { window.location.href = '/'; return; }
+
             try {
-                const userRes = await fetch(`/api/user-info?username=${username}`);
+                // Sử dụng Promise.all để gọi cả 2 API cùng lúc cho nhanh hơn
+                const [userRes, priorityRes] = await Promise.all([
+                    fetch(`/api/user-info?username=${username}`),
+                    fetch(`/api/user-brand-priority?username=${username}`) // Gọi API mới
+                ]);
+
                 const userData = await userRes.json();
+                const priorityData = await priorityRes.json();
+
                 if (userData.success) {
                     document.getElementById('welcome-message').textContent = `Chào, ${userData.userInfo.username}!`;
                     document.getElementById('coin-display').textContent = `Token: ${userData.userInfo.coins}`;
                 }
-            } catch (e) { console.error("Lỗi fetch user info", e); }
+                
+                // Lấy danh sách sảnh ưu tiên từ API
+                const priorityBrands = priorityData.success ? priorityData.priorityBrands : [];
+                
+                // Logic sắp xếp lại mảng gameBrands
+                let sortedGameBrands = [...gameBrands]; // Tạo một bản sao để sắp xếp
+                if (priorityBrands.length > 0) {
+                    // Lọc ra các sảnh ưu tiên và các sảnh còn lại
+                    const priorityBrandObjects = [];
+                    const otherBrands = [];
 
-            const slider = document.getElementById('brand-slider');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            
-            slider.innerHTML = gameBrands.map(brand => `
-                <div class="brand-card" data-brand-name="${brand.name}">
-                    <div class="brand-card-inner">
-                         <div class="logo-background">
-                            <img class="brand-logo" src="/assets/logos/${brand.logo}" alt="${brand.name}">
+                    gameBrands.forEach(brand => {
+                        const priorityIndex = priorityBrands.indexOf(brand.name);
+                        if (priorityIndex !== -1) {
+                            // Nếu là sảnh ưu tiên, lưu lại cùng với vị trí của nó
+                            priorityBrandObjects[priorityIndex] = brand;
+                        } else {
+                            otherBrands.push(brand);
+                        }
+                    });
+                    
+                    // Ghép mảng ưu tiên (đã được sắp xếp) với mảng còn lại
+                    sortedGameBrands = [...priorityBrandObjects.filter(b => b), ...otherBrands];
+                }
+                
+                const slider = document.getElementById('brand-slider');
+                const prevBtn = document.getElementById('prev-btn');
+                const nextBtn = document.getElementById('next-btn');
+                
+                // Sử dụng mảng ĐÃ SẮP XẾP để tạo HTML
+                slider.innerHTML = sortedGameBrands.map(brand => `
+                    <div class="brand-card" data-brand-name="${brand.name}">
+                        <div class="brand-card-inner">
+                             <div class="logo-background">
+                                <img class="brand-logo" src="/assets/logos/${brand.logo}" alt="${brand.name}">
+                            </div>
+                            <div class="brand-name">${brand.name}</div>
                         </div>
-                        <div class="brand-name">${brand.name}</div>
-                    </div>
-                </div>`
-            ).join('');
+                    </div>`
+                ).join('');
 
-            const cards = document.querySelectorAll('.brand-card');
-            let activeIndex = 0;
+                const cards = document.querySelectorAll('.brand-card');
+                let activeIndex = 0;
 
-            function updateCarousel() {
-                cards.forEach((card, i) => {
-                    card.classList.remove('active', 'prev', 'next');
-                    const prevIndex = (activeIndex - 1 + cards.length) % cards.length;
-                    const nextIndex = (activeIndex + 1) % cards.length;
-                    if (i === activeIndex) card.classList.add('active');
-                    else if (i === prevIndex) card.classList.add('prev');
-                    else if (i === nextIndex) card.classList.add('next');
+                function updateCarousel() {
+                    cards.forEach((card, i) => {
+                        card.classList.remove('active', 'prev', 'next');
+                        const prevIndex = (activeIndex - 1 + cards.length) % cards.length;
+                        const nextIndex = (activeIndex + 1) % cards.length;
+                        if (i === activeIndex) card.classList.add('active');
+                        else if (i === prevIndex) card.classList.add('prev');
+                        else if (i === nextIndex) card.classList.add('next');
+                    });
+                }
+
+                nextBtn.addEventListener('click', () => { activeIndex = (activeIndex + 1) % cards.length; updateCarousel(); });
+                prevBtn.addEventListener('click', () => { activeIndex = (activeIndex - 1 + cards.length) % cards.length; updateCarousel(); });
+                
+                slider.addEventListener('click', (e) => {
+                    const clickedCard = e.target.closest('.brand-card');
+                    if (!clickedCard) return;
+
+                    if (clickedCard.classList.contains('active')) {
+                        const brandName = clickedCard.dataset.brandName;
+                        sessionStorage.setItem('selectedBrand', brandName);
+                        window.location.href = `/dashboard.html`;
+                    } 
+                    else if (clickedCard.classList.contains('next')) { activeIndex = (activeIndex + 1) % cards.length; updateCarousel(); }
+                    else if (clickedCard.classList.contains('prev')) { activeIndex = (activeIndex - 1 + cards.length) % cards.length; updateCarousel(); }
                 });
+
+                updateCarousel();
+
+            } catch (e) {
+                console.error("Lỗi khi tải dữ liệu trang chọn sảnh:", e);
             }
-
-            nextBtn.addEventListener('click', () => { activeIndex = (activeIndex + 1) % cards.length; updateCarousel(); });
-            prevBtn.addEventListener('click', () => { activeIndex = (activeIndex - 1 + cards.length) % cards.length; updateCarousel(); });
-            
-            slider.addEventListener('click', (e) => {
-                const clickedCard = e.target.closest('.brand-card');
-                if (!clickedCard) return;
-
-                if (clickedCard.classList.contains('active')) {
-                    const brandName = clickedCard.dataset.brandName;
-                    sessionStorage.setItem('selectedBrand', brandName);
-                    window.location.href = `/dashboard.html`;
-                } 
-                else if (clickedCard.classList.contains('next')) { activeIndex = (activeIndex + 1) % cards.length; updateCarousel(); }
-                else if (clickedCard.classList.contains('prev')) { activeIndex = (activeIndex - 1 + cards.length) % cards.length; updateCarousel(); }
-            });
-
-            updateCarousel();
         };
+        // <<< KẾT THÚC: TOÀN BỘ HÀM window.onload ĐÃ ĐƯỢC CẬP NHẬT >>>
     </script>
     
     <script>
