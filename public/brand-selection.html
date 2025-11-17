@@ -64,7 +64,22 @@
         function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
         
         // === CẬP NHẬT: Thêm QQ88 vào danh sách ===
-        const gameBrands = [ { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' }, { name: 'AU88', logo: 'au88.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' } ];
+        const gameBrands = [
+    { name: 'AU88', logo: 'au88.png' },
+    { name: 'MB66', logo: 'mb66.png' },
+    { name: 'MM88', logo: 'mm88.png' },
+    { name: 'RR88', logo: 'rr88.png' },
+    { name: 'XX88', logo: 'xx88.png' },
+    { name: 'QH88', logo: 'qh88.png' },
+    { name: 'F8BET', logo: 'f8bet.png' },
+    { name: 'SHBET', logo: 'shbet.png' },
+    { name: '188BET', logo: '188bet.png' },
+    { name: 'W88', logo: 'w88.png' },
+    { name: '788WIN', logo: '788win.png' },
+    { name: 'BK88', logo: 'bk88.png' },
+    { name: 'FLY88', logo: 'fly88.png' },
+    { name: 'QQ88', logo: 'qq88.png' }
+];
 
         window.onload = async () => {
             updateClock();
