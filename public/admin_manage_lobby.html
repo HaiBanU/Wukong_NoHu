@@ -48,12 +48,43 @@
         </div>
     </div>
 
+    <!-- === BẮT ĐẦU: MODAL CHỈNH SỬA GAME MỚI === -->
+    <div id="editGameModal" class="modal">
+        <div class="modal-content fadeIn">
+            <span class="close-btn" onclick="closeModals()">&times;</span>
+            <h2 id="edit-game-title">Chỉnh Sửa Ảnh Game</h2>
+            <form id="edit-game-form">
+                <input type="hidden" name="game_id" id="edit-game-id">
+                
+                <div class="form-group" style="text-align: center;">
+                    <label>Ảnh Hiện Tại</label>
+                    <img id="current-game-image" src="" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px; margin-top: 10px; border: 1px solid #ddd;">
+                </div>
+
+                <div class="form-group">
+                    <label>Chọn Ảnh Mới</label>
+                    <input type="file" name="image" accept="image/*" required>
+                </div>
+                <button type="submit" class="btn-primary">Lưu Thay Đổi</button>
+            </form>
+            <div id="edit-game-modal-message" class="modal-alert"></div>
+        </div>
+    </div>
+    <!-- === KẾT THÚC: MODAL MỚI === -->
+
+
     <script>
         const gameContainer = document.getElementById('game-container');
         const lobbyNameTitle = document.getElementById('lobby-name-title');
         const addGameModal = document.getElementById('addGameModal');
         const addGameForm = document.getElementById('add-game-form');
         const modalMessageEl = document.getElementById('modal-message');
+        
+        // === THÊM MỚI: Lấy các phần tử của modal edit game ===
+        const editGameModal = document.getElementById('editGameModal');
+        const editGameForm = document.getElementById('edit-game-form');
+        const editGameModalMessageEl = document.getElementById('edit-game-modal-message');
+
         const params = new URLSearchParams(window.location.search);
         const lobbyId = params.get('id');
         const lobbyName = decodeURIComponent(params.get('name'));
@@ -74,19 +105,32 @@
             }, 4000);
         }
 
-        function showModalMessage(message, isSuccess) {
-            modalMessageEl.classList.remove('show', 'modal-alert-success', 'modal-alert-error');
+        function showModalMessage(message, isSuccess, modalType = 'add') {
+            const el = modalType === 'add' ? modalMessageEl : editGameModalMessageEl;
+            el.classList.remove('show', 'modal-alert-success', 'modal-alert-error');
             if (!message) return;
-            modalMessageEl.textContent = message;
-            modalMessageEl.classList.add('show', isSuccess ? 'modal-alert-success' : 'modal-alert-error');
+            el.textContent = message;
+            el.classList.add('show', isSuccess ? 'modal-alert-success' : 'modal-alert-error');
         }
 
         function openAddGameModal() {
-            showModalMessage('', true);
+            showModalMessage('', true, 'add');
             document.getElementById('game-lobby-id').value = lobbyId;
             addGameModal.style.display = 'flex';
         }
-        function closeModals() { addGameModal.style.display = 'none'; }
+
+        function openEditGameModal(gameId, gameName, currentImageUrl) {
+            showModalMessage('', true, 'edit');
+            document.getElementById('edit-game-id').value = gameId;
+            document.getElementById('edit-game-title').textContent = `Sửa ảnh: ${gameName}`;
+            document.getElementById('current-game-image').src = currentImageUrl;
+            editGameModal.style.display = 'flex';
+        }
+
+        function closeModals() { 
+            addGameModal.style.display = 'none'; 
+            editGameModal.style.display = 'none';
+        }
 
         async function fetchAndDisplayGames() {
             if (!lobbyId) {
@@ -102,11 +146,14 @@
                     const card = document.createElement('div');
                     card.className = 'card';
                     
-                    // === CẬP NHẬT: Đã xóa nút Xóa khỏi đây ===
                     card.innerHTML = `
-    <h4>${game.name}</h4>
-    <img src="${game.image_url}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;" loading="lazy">
-`;
+                        <h4>${game.name}</h4>
+                        <img src="${game.image_url}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;" loading="lazy">
+                        <button class="btn-primary" style="width: 100%; margin-top: 15px; background: #5a6268;" 
+                                onclick="openEditGameModal('${game._id}', '${game.name}', '${game.image_url}')">
+                            Sửa Ảnh
+                        </button>
+                    `;
                     gameContainer.appendChild(card);
                 });
             } else {
@@ -114,32 +161,11 @@
             }
         }
 
-        /* === CẬP NHẬT: Vô hiệu hóa chức năng xóa game ===
-        async function deleteGame(gameId, gameName) {
-            if (confirm(`Bạn có chắc chắn muốn xóa game "${gameName}" không?`)) {
-                try {
-                    const response = await fetch('/api/delete-game', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ gameId: gameId })
-                    });
-                    const result = await response.json();
-                    showToast(result.message, result.success);
-                    if (result.success) {
-                        fetchAndDisplayGames();
-                    }
-                } catch(error) {
-                    showToast('Lỗi kết nối máy chủ!', false);
-                }
-            }
-        }
-        */
-
         addGameForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
             button.classList.add('btn-loading');
-            showModalMessage('', true);
+            showModalMessage('', true, 'add');
             const formData = new FormData(addGameForm);
             try {
                 const response = await fetch('/api/add-game', { method: 'POST', body: formData });
@@ -150,10 +176,34 @@
                     closeModals();
                     fetchAndDisplayGames();
                 } else {
-                    showModalMessage(result.message, false);
+                    showModalMessage(result.message, false, 'add');
                 }
             } catch (error) {
-                showModalMessage('Lỗi kết nối máy chủ!', false);
+                showModalMessage('Lỗi kết nối máy chủ!', false, 'add');
+            } finally {
+                button.classList.remove('btn-loading');
+            }
+        });
+        
+        editGameForm.addEventListener('submit', async(e) => {
+            e.preventDefault();
+            const button = e.target.querySelector('button[type="submit"]');
+            button.classList.add('btn-loading');
+            showModalMessage('', true, 'edit');
+            const formData = new FormData(editGameForm);
+            try {
+                const response = await fetch('/api/update-game', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.success) {
+                    showToast(result.message, true);
+                    editGameForm.reset();
+                    closeModals();
+                    fetchAndDisplayGames();
+                } else {
+                    showModalMessage(result.message, false, 'edit');
+                }
+            } catch (error) {
+                 showModalMessage('Lỗi kết nối máy chủ!', false, 'edit');
             } finally {
                 button.classList.remove('btn-loading');
             }
@@ -178,7 +228,11 @@
             }
         }
 
-        window.onclick = (event) => { if (event.target == addGameModal) closeModals(); }
+        window.onclick = (event) => { 
+            if (event.target == addGameModal || event.target == editGameModal) {
+                closeModals(); 
+            }
+        }
         window.onload = () => { fetchAndDisplayGames(); fetchAdminInfo(); };
     </script>
 </body>

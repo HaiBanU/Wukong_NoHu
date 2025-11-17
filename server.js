@@ -202,20 +202,16 @@ app.get('/api/user-brand-priority', async (req, res) => {
             return res.status(400).json({ success: false, message: "Thiếu tên người dùng." });
         }
 
-        // Tìm người dùng và sử dụng .populate() để lấy thông tin chi tiết của các admin quản lý
-        // Chúng ta chỉ cần lấy trường 'assigned_brand' từ các admin đó
         const user = await User.findOne({ username }).populate('managed_by_admin_ids', 'assigned_brand');
 
         if (!user) {
             return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
         }
 
-        // Lọc ra danh sách các sảnh game từ thông tin admin
         const priorityBrands = user.managed_by_admin_ids
-            .map(admin => admin.assigned_brand) // Lấy tên sảnh từ mỗi admin
-            .filter(brand => brand); // Loại bỏ các giá trị null hoặc undefined nếu có
+            .map(admin => admin.assigned_brand) 
+            .filter(brand => brand); 
 
-        // Sử dụng Set để loại bỏ các sảnh trùng lặp, sau đó chuyển lại thành mảng
         const uniquePriorityBrands = [...new Set(priorityBrands)];
 
         res.json({ success: true, priorityBrands: uniquePriorityBrands });
@@ -488,11 +484,9 @@ app.post('/api/update-lobby-order', async (req, res) => {
     }
 });
 
-// --- BẮT ĐẦU CODE MỚI: API ĐỂ CẬP NHẬT SẢNH (BAO GỒM THAY ĐỔI LOGO) ---
 app.post('/api/update-lobby', upload.single('logo'), async (req, res) => {
     try {
         const { lobby_id } = req.body;
-        // Kiểm tra xem có ID sảnh và file ảnh mới không
         if (!lobby_id) {
             return res.status(400).json({ success: false, message: 'Thiếu ID của sảnh.' });
         }
@@ -500,18 +494,14 @@ app.post('/api/update-lobby', upload.single('logo'), async (req, res) => {
             return res.status(400).json({ success: false, message: 'Vui lòng chọn ảnh logo mới.' });
         }
 
-        // 1. Tìm sảnh cũ để lấy URL logo cần xóa
         const lobby = await Lobby.findById(lobby_id);
         if (!lobby) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy sảnh game.' });
         }
         const oldLogoUrl = lobby.logo_url;
 
-        // 2. Xóa logo cũ khỏi Cloudinary
         if (oldLogoUrl) {
             try {
-                // Trích xuất public_id từ URL của Cloudinary
-                // Ví dụ URL: http://res.cloudinary.com/cloud_name/image/upload/v12345/folder/public_id.gif
                 const urlParts = oldLogoUrl.split('/');
                 const public_id_with_extension = urlParts.slice(urlParts.indexOf('troll_tool')).join('/');
                 const public_id = public_id_with_extension.substring(0, public_id_with_extension.lastIndexOf('.'));
@@ -519,19 +509,12 @@ app.post('/api/update-lobby', upload.single('logo'), async (req, res) => {
                 await cloudinary.uploader.destroy(public_id);
                 console.log(`Successfully deleted old logo from Cloudinary: ${public_id}`);
             } catch (deleteError) {
-                // Nếu xóa lỗi cũng không sao, vẫn tiếp tục cập nhật ảnh mới
                 console.error("Could not delete old logo from Cloudinary:", deleteError.message);
             }
         }
 
-        // 3. Lấy URL của logo mới đã được multer upload lên
         const newLogoUrl = req.file.path;
-
-        // 4. Cập nhật sảnh trong database với URL mới
-        await Lobby.updateOne({ _id: lobby_id }, {
-            $set: { logo_url: newLogoUrl }
-        });
-
+        await Lobby.updateOne({ _id: lobby_id }, { $set: { logo_url: newLogoUrl } });
         res.json({ success: true, message: 'Cập nhật logo sảnh thành công!' });
 
     } catch (error) {
@@ -539,7 +522,6 @@ app.post('/api/update-lobby', upload.single('logo'), async (req, res) => {
         res.status(500).json({ success: false, message: 'Lỗi server khi cập nhật sảnh.' });
     }
 });
-// --- KẾT THÚC CODE MỚI ---
 
 app.get('/api/games', async (req, res) => {
     try {
@@ -551,6 +533,51 @@ app.get('/api/games', async (req, res) => {
         res.status(500).json({ success: false, message: "Lỗi server khi lấy game" });
     }
 });
+
+// --- BẮT ĐẦU CODE MỚI: API ĐỂ CẬP NHẬT ẢNH GAME ---
+app.post('/api/update-game', upload.single('image'), async (req, res) => {
+    try {
+        const { game_id } = req.body;
+        if (!game_id) {
+            return res.status(400).json({ success: false, message: 'Thiếu ID của game.' });
+        }
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Vui lòng chọn ảnh game mới.' });
+        }
+
+        const game = await Game.findById(game_id);
+        if (!game) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy game.' });
+        }
+        const oldImageUrl = game.image_url;
+
+        if (oldImageUrl) {
+            try {
+                const urlParts = oldImageUrl.split('/');
+                const public_id_with_extension = urlParts.slice(urlParts.indexOf('troll_tool')).join('/');
+                const public_id = public_id_with_extension.substring(0, public_id_with_extension.lastIndexOf('.'));
+                
+                await cloudinary.uploader.destroy(public_id);
+                console.log(`Successfully deleted old game image from Cloudinary: ${public_id}`);
+            } catch (deleteError) {
+                console.error("Could not delete old game image from Cloudinary:", deleteError.message);
+            }
+        }
+
+        const newImageUrl = req.file.path;
+        await Game.updateOne({ _id: game_id }, { $set: { image_url: newImageUrl } });
+        
+        // Xóa cache của sảnh chứa game này để user thấy ảnh mới ngay
+        delete lobbyRatesCache[game.lobby_id.toString()];
+
+        res.json({ success: true, message: 'Cập nhật ảnh game thành công!' });
+    } catch (error) {
+        console.error("Lỗi khi cập nhật game:", error);
+        res.status(500).json({ success: false, message: 'Lỗi server khi cập nhật game.' });
+    }
+});
+// --- KẾT THÚC CODE MỚI ---
+
 
 app.get('/api/games-with-rates', async (req, res) => {
     try {
