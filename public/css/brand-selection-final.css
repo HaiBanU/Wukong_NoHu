@@ -89,19 +89,71 @@ body {
 .brand-name { font-size: 1.5em; font-weight: 700; font-family: 'Poppins', sans-serif; color: var(--primary-red); text-shadow: 0 0 15px var(--primary-red); }
 
 /* ======================================= */
-/* === VỊ TRÍ 3D (DESKTOP) === */
+/* === VỊ TRÍ 3D (DESKTOP) - PHIÊN BẢN 5 THẺ === */
 /* ======================================= */
-.brand-card.active { transform: translateX(0) translateZ(0) scale(1); opacity: 1; z-index: 100; }
-.brand-card.prev { transform: translateX(-75%) translateZ(-200px) scale(0.8); opacity: 0.6; z-index: 90; }
-.brand-card.next { transform: translateX(75%) translateZ(-200px) scale(0.8); opacity: 0.6; z-index: 90; }
-.brand-card:not(.active):not(.prev):not(.next) { transform: scale(0.5); opacity: 0; pointer-events: none; }
+/* Thẻ chính giữa, to nhất */
+.brand-card.active { 
+    transform: translateX(0) translateZ(0) scale(1); 
+    opacity: 1; 
+    z-index: 100; 
+}
+/* Hai thẻ ngay cạnh thẻ chính */
+.brand-card.prev { 
+    transform: translateX(-65%) translateZ(-180px) scale(0.85); 
+    opacity: 0.7; 
+    z-index: 95; 
+}
+.brand-card.next { 
+    transform: translateX(65%) translateZ(-180px) scale(0.85); 
+    opacity: 0.7; 
+    z-index: 95; 
+}
+/* Hai thẻ ngoài cùng, nhỏ nhất */
+.brand-card.prev2 { 
+    transform: translateX(-130%) translateZ(-320px) scale(0.7); 
+    opacity: 0.4; 
+    z-index: 90; 
+}
+.brand-card.next2 { 
+    transform: translateX(130%) translateZ(-320px) scale(0.7); 
+    opacity: 0.4; 
+    z-index: 90; 
+}
+
+.brand-card:not(.active):not(.prev):not(.next):not(.prev2):not(.next2) { 
+    transform: scale(0.5); 
+    opacity: 0; 
+    pointer-events: none; 
+}
+
 
 /* ======================================= */
 /* === NÚT ĐIỀU KHIỂN (DESKTOP) === */
 /* ======================================= */
 .carousel-controls { display: flex; justify-content: space-between; width: 100%; max-width: 800px; margin-top: 20px; }
-.control-btn { background: transparent; border: none; color: #fff; font-size: 1.2em; font-family: 'Poppins', sans-serif; font-weight: 700; cursor: pointer; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); transition: all 0.2s ease; padding: 10px 20px; display: flex; align-items: center; gap: 10px; }
-.control-btn:hover { color: var(--primary-red); text-shadow: 0 0 15px var(--primary-red); transform: scale(1.1); }
+
+.control-btn { 
+    background: linear-gradient(45deg, var(--secondary-red), var(--primary-red)); 
+    border: 1px solid rgba(255, 255, 255, 0.2); 
+    color: #fff; 
+    font-size: 1.1em; 
+    font-family: 'Poppins', sans-serif; 
+    font-weight: 700; 
+    cursor: pointer; 
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5); 
+    transition: all 0.2s ease-in-out; 
+    padding: 12px 30px; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    border-radius: 50px; 
+    box-shadow: 0 4px 15px rgba(217, 4, 41, 0.4); 
+}
+.control-btn:hover { 
+    transform: translateY(-3px) scale(1.05); 
+    box-shadow: 0 6px 20px rgba(217, 4, 41, 0.7); 
+}
+
 .control-btn .arrow { font-size: 1.5em; }
 
 @media (max-width: 768px) {

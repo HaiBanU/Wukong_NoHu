@@ -18,8 +18,8 @@ const port = 3000;
 let lobbyRatesCache = {};
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
-// <<< ĐÃ SẮP XẾP LẠI THỨ TỰ SẢNH GAME >>>
-const gameBrands = [ { name: 'AU88', logo: 'au88.png' }, { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' } ];
+// <<< DANH SÁCH SẢNH GAME ĐÃ ĐƯỢC CẬP NHẬT >>>
+const gameBrands = [ { name: 'AU88', logo: 'au88.png' }, { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' }, { name: 'U888', logo: 'u888.png' }, { name: 'BL555', logo: 'bl555.png' } ];
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -195,7 +195,6 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-// <<< BẮT ĐẦU: API MỚI ĐƯỢC THÊM VÀO >>>
 app.get('/api/user-brand-priority', async (req, res) => {
     try {
         const { username } = req.query;
@@ -225,7 +224,6 @@ app.get('/api/user-brand-priority', async (req, res) => {
         res.status(500).json({ success: false, message: "Lỗi server." });
     }
 });
-// <<< KẾT THÚC: API MỚI ĐƯỢC THÊM VÀO >>>
 
 app.post('/api/link-user', async (req, res) => {
     try {

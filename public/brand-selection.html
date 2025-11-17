@@ -63,10 +63,8 @@
         document.querySelector('.logout-button').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
         function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
         
-        // <<< ĐÃ SẮP XẾP LẠI THỨ TỰ SẢNH GAME >>>
-        const gameBrands = [ { name: 'AU88', logo: 'au88.png' }, { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'W88', logo: 'w88.png' }, { name: '788WIN', logo: '788win.png' }, { name: 'BK88', logo: 'bk88.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' } ];
+        const gameBrands = [ { name: 'AU88', logo: 'au88.png' }, { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' }, { name: 'U888', logo: 'u888.png' }, { name: 'BL555', logo: 'bl555.png' } ];
 
-        // <<< BẮT ĐẦU: TOÀN BỘ HÀM window.onload ĐÃ ĐƯỢC CẬP NHẬT >>>
         window.onload = async () => {
             updateClock();
             setInterval(updateClock, 1000);
@@ -157,16 +155,33 @@
                 ).join('');
 
                 const cards = document.querySelectorAll('.brand-card');
+                
+                // <<< BẮT ĐẦU CẬP NHẬT LOGIC JS CHO 5 THẺ >>>
                 let activeIndex = 0;
 
                 function updateCarousel() {
                     cards.forEach((card, i) => {
-                        card.classList.remove('active', 'prev', 'next');
+                        // Xóa tất cả các lớp vị trí cũ
+                        card.classList.remove('active', 'prev', 'next', 'prev2', 'next2');
+
+                        // Tính toán chỉ số cho cả 5 vị trí
+                        const prev2Index = (activeIndex - 2 + cards.length) % cards.length;
                         const prevIndex = (activeIndex - 1 + cards.length) % cards.length;
                         const nextIndex = (activeIndex + 1) % cards.length;
-                        if (i === activeIndex) card.classList.add('active');
-                        else if (i === prevIndex) card.classList.add('prev');
-                        else if (i === nextIndex) card.classList.add('next');
+                        const next2Index = (activeIndex + 2) % cards.length;
+                        
+                        // Gán lớp mới dựa trên vị trí
+                        if (i === activeIndex) {
+                            card.classList.add('active');
+                        } else if (i === prevIndex) {
+                            card.classList.add('prev');
+                        } else if (i === nextIndex) {
+                            card.classList.add('next');
+                        } else if (i === prev2Index) {
+                            card.classList.add('prev2');
+                        } else if (i === next2Index) {
+                            card.classList.add('next2');
+                        }
                     });
                 }
 
@@ -182,17 +197,25 @@
                         sessionStorage.setItem('selectedBrand', brandName);
                         window.location.href = `/dashboard.html`;
                     } 
-                    else if (clickedCard.classList.contains('next')) { activeIndex = (activeIndex + 1) % cards.length; updateCarousel(); }
-                    else if (clickedCard.classList.contains('prev')) { activeIndex = (activeIndex - 1 + cards.length) % cards.length; updateCarousel(); }
+                    // Nếu nhấn vào bất kỳ thẻ nào bên phải, di chuyển sang phải 1 bước
+                    else if (clickedCard.classList.contains('next') || clickedCard.classList.contains('next2')) { 
+                        activeIndex = (activeIndex + 1) % cards.length; 
+                        updateCarousel(); 
+                    }
+                    // Nếu nhấn vào bất kỳ thẻ nào bên trái, di chuyển sang trái 1 bước
+                    else if (clickedCard.classList.contains('prev') || clickedCard.classList.contains('prev2')) { 
+                        activeIndex = (activeIndex - 1 + cards.length) % cards.length; 
+                        updateCarousel(); 
+                    }
                 });
 
                 updateCarousel();
+                // <<< KẾT THÚC CẬP NHẬT LOGIC JS CHO 5 THẺ >>>
 
             } catch (e) {
                 console.error("Lỗi khi tải dữ liệu trang chọn sảnh:", e);
             }
         };
-        // <<< KẾT THÚC: TOÀN BỘ HÀM window.onload ĐÃ ĐƯỢC CẬP NHẬT >>>
     </script>
     
     <script>
