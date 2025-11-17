@@ -487,6 +487,60 @@ app.post('/api/update-lobby-order', async (req, res) => {
         res.status(500).json({ success: false, message: "Lỗi server khi cập nhật thứ tự." });
     }
 });
+
+// --- BẮT ĐẦU CODE MỚI: API ĐỂ CẬP NHẬT SẢNH (BAO GỒM THAY ĐỔI LOGO) ---
+app.post('/api/update-lobby', upload.single('logo'), async (req, res) => {
+    try {
+        const { lobby_id } = req.body;
+        // Kiểm tra xem có ID sảnh và file ảnh mới không
+        if (!lobby_id) {
+            return res.status(400).json({ success: false, message: 'Thiếu ID của sảnh.' });
+        }
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Vui lòng chọn ảnh logo mới.' });
+        }
+
+        // 1. Tìm sảnh cũ để lấy URL logo cần xóa
+        const lobby = await Lobby.findById(lobby_id);
+        if (!lobby) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy sảnh game.' });
+        }
+        const oldLogoUrl = lobby.logo_url;
+
+        // 2. Xóa logo cũ khỏi Cloudinary
+        if (oldLogoUrl) {
+            try {
+                // Trích xuất public_id từ URL của Cloudinary
+                // Ví dụ URL: http://res.cloudinary.com/cloud_name/image/upload/v12345/folder/public_id.gif
+                const urlParts = oldLogoUrl.split('/');
+                const public_id_with_extension = urlParts.slice(urlParts.indexOf('troll_tool')).join('/');
+                const public_id = public_id_with_extension.substring(0, public_id_with_extension.lastIndexOf('.'));
+                
+                await cloudinary.uploader.destroy(public_id);
+                console.log(`Successfully deleted old logo from Cloudinary: ${public_id}`);
+            } catch (deleteError) {
+                // Nếu xóa lỗi cũng không sao, vẫn tiếp tục cập nhật ảnh mới
+                console.error("Could not delete old logo from Cloudinary:", deleteError.message);
+            }
+        }
+
+        // 3. Lấy URL của logo mới đã được multer upload lên
+        const newLogoUrl = req.file.path;
+
+        // 4. Cập nhật sảnh trong database với URL mới
+        await Lobby.updateOne({ _id: lobby_id }, {
+            $set: { logo_url: newLogoUrl }
+        });
+
+        res.json({ success: true, message: 'Cập nhật logo sảnh thành công!' });
+
+    } catch (error) {
+        console.error("Lỗi khi cập nhật sảnh:", error);
+        res.status(500).json({ success: false, message: 'Lỗi server khi cập nhật sảnh.' });
+    }
+});
+// --- KẾT THÚC CODE MỚI ---
+
 app.get('/api/games', async (req, res) => {
     try {
         const { lobby_id } = req.query;

@@ -53,6 +53,31 @@
              <div id="modal-message" class="modal-alert"></div>
         </div>
     </div>
+
+    <!-- === BẮT ĐẦU: MODAL CHỈNH SỬA SẢNH MỚI === -->
+    <div id="editLobbyModal" class="modal">
+        <div class="modal-content fadeIn">
+            <span class="close-btn" onclick="closeModals()">&times;</span>
+            <h2 id="edit-lobby-title">Chỉnh Sửa Sảnh</h2>
+            <form id="edit-lobby-form">
+                <!-- Input ẩn để lưu ID của sảnh đang sửa -->
+                <input type="hidden" name="lobby_id" id="edit-lobby-id">
+                
+                <div class="form-group" style="text-align: center;">
+                    <label>Logo Hiện Tại</label>
+                    <img id="current-lobby-logo" src="" style="max-width: 150px; max-height: 80px; margin-top: 10px; border: 1px solid #ddd; padding: 5px; border-radius: 8px;">
+                </div>
+
+                <div class="form-group">
+                    <label>Chọn Logo Mới</label>
+                    <input type="file" name="logo" accept="image/gif, image/jpeg, image/png" required>
+                </div>
+                <button type="submit" class="btn-primary">Lưu Thay Đổi</button>
+            </form>
+             <div id="edit-modal-message" class="modal-alert"></div>
+        </div>
+    </div>
+    <!-- === KẾT THÚC: MODAL MỚI === -->
     
     <script>
         const lobbyContainer = document.getElementById('lobby-container');
@@ -60,6 +85,12 @@
         const addLobbyForm = document.getElementById('add-lobby-form');
         const saveOrderBtn = document.getElementById('save-order-btn');
         const modalMessageEl = document.getElementById('modal-message');
+        
+        // === THÊM MỚI: Lấy các phần tử của modal edit ===
+        const editLobbyModal = document.getElementById('editLobbyModal');
+        const editLobbyForm = document.getElementById('edit-lobby-form');
+        const editModalMessageEl = document.getElementById('edit-modal-message');
+        
         let sortableInstance = null;
 
         function showToast(message, isSuccess = true) {
@@ -78,18 +109,31 @@
             }, 4000);
         }
 
-        function showModalMessage(message, isSuccess) {
-            modalMessageEl.classList.remove('show', 'modal-alert-success', 'modal-alert-error');
+        function showModalMessage(message, isSuccess, modalType = 'add') {
+            const el = modalType === 'add' ? modalMessageEl : editModalMessageEl;
+            el.classList.remove('show', 'modal-alert-success', 'modal-alert-error');
             if (!message) return;
-            modalMessageEl.textContent = message;
-            modalMessageEl.classList.add('show', isSuccess ? 'modal-alert-success' : 'modal-alert-error');
+            el.textContent = message;
+            el.classList.add('show', isSuccess ? 'modal-alert-success' : 'modal-alert-error');
         }
 
         function openAddLobbyModal() { 
-            showModalMessage('', true);
+            showModalMessage('', true, 'add');
             addLobbyModal.style.display = 'flex'; 
         }
-        function closeModals() { addLobbyModal.style.display = 'none'; }
+
+        function openEditLobbyModal(lobbyId, lobbyName, currentLogoUrl) {
+            showModalMessage('', true, 'edit');
+            document.getElementById('edit-lobby-id').value = lobbyId;
+            document.getElementById('edit-lobby-title').textContent = `Chỉnh Sửa Sảnh "${lobbyName}"`;
+            document.getElementById('current-lobby-logo').src = currentLogoUrl;
+            editLobbyModal.style.display = 'flex';
+        }
+
+        function closeModals() { 
+            addLobbyModal.style.display = 'none'; 
+            editLobbyModal.style.display = 'none';
+        }
         
         async function fetchAndDisplayLobbies() {
             const response = await fetch('/api/lobbies');
@@ -97,17 +141,24 @@
             lobbyContainer.innerHTML = '';
             if (data.success && data.lobbies.length > 0) {
                 data.lobbies.forEach(lobby => {
-                    const cardLink = document.createElement('a');
-                    cardLink.href = `/admin_manage_lobby.html?id=${lobby._id}&name=${encodeURIComponent(lobby.name)}`;
-                    cardLink.className = 'card';
-                    cardLink.dataset.id = lobby._id;
-                    cardLink.innerHTML = `
-    <h3>${lobby.name}</h3>
-    <img src="${lobby.logo_url}" style="width: 100px; height: 50px; object-fit: contain;" loading="lazy">
-    <p style="margin-top: 10px; font-size: 0.8em; color: #888;">Nhấn để quản lý game</p>
-`;
-                    lobbyContainer.appendChild(cardLink);
+                    const cardWrapper = document.createElement('div');
+                    cardWrapper.className = 'card';
+                    cardWrapper.dataset.id = lobby._id;
+                    
+                    cardWrapper.innerHTML = `
+                        <a href="/admin_manage_lobby.html?id=${lobby._id}&name=${encodeURIComponent(lobby.name)}" style="text-decoration: none; color: inherit; display: block;">
+                            <h3>${lobby.name}</h3>
+                            <img src="${lobby.logo_url}" style="width: 100px; height: 50px; object-fit: contain;" loading="lazy">
+                            <p style="margin-top: 10px; font-size: 0.8em; color: #888;">Nhấn để quản lý game</p>
+                        </a>
+                        <button class="btn-primary" style="width: 100%; margin-top: 15px; background: #5a6268;" 
+                                onclick="event.preventDefault(); openEditLobbyModal('${lobby._id}', '${lobby.name}', '${lobby.logo_url}')">
+                            Sửa Sảnh
+                        </button>
+                    `;
+                    lobbyContainer.appendChild(cardWrapper);
                 });
+
                 if (!sortableInstance) {
                     sortableInstance = new Sortable(lobbyContainer, {
                         animation: 150,
@@ -124,7 +175,7 @@
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
             button.classList.add('btn-loading');
-            showModalMessage('', true);
+            showModalMessage('', true, 'add');
             const formData = new FormData(addLobbyForm);
             try {
                 const response = await fetch('/api/add-lobby', { method: 'POST', body: formData });
@@ -135,10 +186,39 @@
                     closeModals();
                     fetchAndDisplayLobbies();
                 } else {
-                    showModalMessage(result.message, false);
+                    showModalMessage(result.message, false, 'add');
                 }
             } catch (error) {
-                showModalMessage('Lỗi kết nối máy chủ!', false);
+                showModalMessage('Lỗi kết nối máy chủ!', false, 'add');
+            } finally {
+                button.classList.remove('btn-loading');
+            }
+        });
+        
+        editLobbyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const button = e.target.querySelector('button[type="submit"]');
+            button.classList.add('btn-loading');
+            showModalMessage('', true, 'edit');
+
+            const formData = new FormData(editLobbyForm);
+            try {
+                const response = await fetch('/api/update-lobby', { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(result.message, true);
+                    editLobbyForm.reset();
+                    closeModals();
+                    fetchAndDisplayLobbies();
+                } else {
+                    showModalMessage(result.message, false, 'edit');
+                }
+            } catch (error) {
+                showModalMessage('Lỗi kết nối máy chủ!', false, 'edit');
             } finally {
                 button.classList.remove('btn-loading');
             }
@@ -185,7 +265,11 @@
             }
         }
 
-        window.onclick = (event) => { if (event.target == addLobbyModal) closeModals(); }
+        window.onclick = (event) => { 
+            if (event.target == addLobbyModal || event.target == editLobbyModal) {
+                closeModals();
+            }
+        }
         window.onload = () => { fetchAndDisplayLobbies(); fetchAdminInfo(); };
     </script>
 </body>
