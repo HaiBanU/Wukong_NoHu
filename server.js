@@ -16,11 +16,7 @@ const port = process.env.PORT || 3000;
 // Đường dẫn này PHẢI TRÙNG KHỚP với Mount Path bạn đã cấu hình trên Render.
 const UPLOADS_DIR = '/var/data/uploads'; 
 
-// Đảm bảo thư mục uploads tồn tại, nếu không thì tạo nó khi server khởi động
-if (!fs.existsSync(UPLOADS_DIR)){
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-    console.log(`Created storage directory at: ${UPLOADS_DIR}`);
-}
+
 
 let lobbyRatesCache = {};
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
