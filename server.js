@@ -1,4 +1,4 @@
-// --- START OF FILE server.js (ĐÃ CẬP NHẬT ĐỂ SỬ DỤNG RENDER DISK) ---
+// --- START OF FILE server.js (ĐÃ CẬP NHẬT CHI PHÍ TOKEN LÊN 10) ---
 
 // === THÊM MỚI: Dòng này phải ở trên cùng để nạp biến môi trường ===
 require('dotenv').config();
@@ -19,12 +19,10 @@ const port = process.env.PORT || 3000;
 // Đường dẫn này PHẢI TRÙNG KHỚP với Mount Path bạn đã cấu hình trên Render.
 const UPLOADS_DIR = '/var/data/uploads'; 
 
-
-
 let lobbyRatesCache = {};
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
-const gameBrands = [ { name: 'AU88', logo: 'au88.png' }, { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' }, { name: 'U888', logo: 'u888.png' }, { name: 'BL555', logo: 'bl555.png' } ];
+const gameBrands = [ { name: 'AU88', logo: 'au88.png' }, { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' }, { name: 'U888', logo: 'u888.png' }, { name: 'BL555', logo: 'bl555.png' }, { name: '8KBET', logo: '8kbet.png' } ];
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -36,22 +34,16 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 // Cấu hình Multer để lưu file vào ổ đĩa cục bộ
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // Đảm bảo thư mục tồn tại
-        if (!fs.existsSync(UPLOADS_DIR)){
-            fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-        }
+        if (!fs.existsSync(UPLOADS_DIR)){ fs.mkdirSync(UPLOADS_DIR, { recursive: true }); }
         cb(null, UPLOADS_DIR);
     },
     filename: function (req, file, cb) {
-        // Tạo tên file duy nhất để tránh trùng lặp
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
 });
 const upload = multer({ storage: storage });
 
-// Sử dụng biến môi trường của Render (bạn cần set MONGODB_URI trong tab Environment của Render)
-// KHI CHẠY LOCAL, NÓ SẼ LẤY TỪ TỆP .env NHỜ DÒNG require('dotenv').config() Ở TRÊN
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => { 
         console.log('Connected to the MongoDB database.'); 
@@ -76,78 +68,11 @@ async function migrateOrphanedSubAdmins() { try { const originalSuperAdmin = awa
 app.post('/api/register', async (req, res) => { try { const { username, password } = req.body; if (!username || !password) { return res.status(400).json({ success: false, message: 'Tên đăng nhập và mật khẩu không được để trống' }); } if (username.length <= 4) { return res.status(400).json({ success: false, message: 'Tên đăng nhập phải có nhiều hơn 4 ký tự' }); } if (password.length <= 6) { return res.status(400).json({ success: false, message: 'Mật khẩu phải có nhiều hơn 6 ký tự' }); } const existingUser = await User.findOne({ username }); if (existingUser) { return res.status(409).json({ success: false, message: 'Tên đăng nhập đã tồn tại' }); } const hashedPassword = await bcrypt.hash(password, 10); await new User({ username, password: hashedPassword }).save(); res.json({ success: true, message: 'Đăng ký thành công!' }); } catch (error) { res.status(500).json({ success: false, message: 'Lỗi server khi tạo tài khoản' }); } });
 app.post('/api/login', async (req, res) => { try { const { username, password } = req.body; const user = await User.findOne({ username }); if (!user) return res.status(404).json({ success: false, message: 'Tên đăng nhập không tồn tại' }); const isMatch = await bcrypt.compare(password, user.password); if (isMatch) { res.json({ success: true, message: 'Đăng nhập thành công!', isAdmin: user.is_admin, isSuperAdmin: user.is_super_admin, userId: user.is_admin ? user._id : null }); } else { res.status(401).json({ success: false, message: 'Mật khẩu không chính xác' }); } } catch (error) { res.status(500).json({ success: false, message: 'Lỗi server' }); } });
 app.get('/api/brands', (req, res) => { res.json({ success: true, brands: gameBrands }); });
-
-// === BẮT ĐẦU: API ĐƯỢC CẬP NHẬT LOGIC % ===
-app.get('/api/brands-with-rates', async (req, res) => {
-    try {
-        const { username } = req.query;
-        if (!username) {
-            return res.status(400).json({ success: false, message: "Thiếu tên người dùng." });
-        }
-
-        const user = await User.findOne({ username }).populate('managed_by_admin_ids', 'assigned_brand');
-        if (!user) {
-            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
-        }
-
-        const priorityBrand = user.managed_by_admin_ids
-            .map(admin => admin.assigned_brand)
-            .find(brand => brand);
-
-        let brandsWithRates;
-
-        if (priorityBrand) {
-            // Logic cho người dùng đã có Admin quản lý
-            brandsWithRates = gameBrands.map(brand => {
-                if (brand.name === priorityBrand) {
-                    return {
-                        ...brand,
-                        // Tỷ lệ cao cho sảnh ưu tiên: 91% - 98%
-                        percentage: Math.floor(Math.random() * 8) + 91,
-                    };
-                } else {
-                    return {
-                        ...brand,
-                        // Tỷ lệ thấp cho sảnh khác: 50% - 69%
-                        percentage: Math.floor(Math.random() * 20) + 50,
-                    };
-                }
-            });
-            
-            // Sắp xếp lại để đưa sảnh ưu tiên lên đầu
-            brandsWithRates.sort((a, b) => {
-                if (a.name === priorityBrand) return -1;
-                if (b.name === priorityBrand) return 1;
-                return 0;
-            });
-
-        } else {
-            // Logic cho người dùng mới, chưa có Admin
-            brandsWithRates = gameBrands.map(brand => ({
-                ...brand,
-                // Tỷ lệ bình thường: 70% - 89%
-                percentage: Math.floor(Math.random() * 20) + 70,
-            }));
-        }
-
-        res.json({
-            success: true,
-            brands: brandsWithRates,
-            priorityBrand: priorityBrand || null
-        });
-
-    } catch (error) {
-        console.error("Lỗi khi lấy sảnh với tỷ lệ:", error);
-        res.status(500).json({ success: false, message: "Lỗi server." });
-    }
-});
-// === KẾT THÚC: API ĐƯỢC CẬP NHẬT LOGIC % ===
-
-
+app.get('/api/brands-with-rates', async (req, res) => { try { const { username } = req.query; if (!username) { return res.status(400).json({ success: false, message: "Thiếu tên người dùng." }); } const user = await User.findOne({ username }).populate('managed_by_admin_ids', 'assigned_brand'); if (!user) { return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." }); } const priorityBrand = user.managed_by_admin_ids.map(admin => admin.assigned_brand).find(brand => brand); let brandsWithRates; if (priorityBrand) { brandsWithRates = gameBrands.map(brand => (brand.name === priorityBrand ? { ...brand, percentage: Math.floor(Math.random() * 8) + 91 } : { ...brand, percentage: Math.floor(Math.random() * 20) + 50 })); brandsWithRates.sort((a, b) => { if (a.name === priorityBrand) return -1; if (b.name === priorityBrand) return 1; return 0; }); } else { brandsWithRates = gameBrands.map(brand => ({ ...brand, percentage: Math.floor(Math.random() * 20) + 70 })); } res.json({ success: true, brands: brandsWithRates, priorityBrand: priorityBrand || null }); } catch (error) { console.error("Lỗi khi lấy sảnh với tỷ lệ:", error); res.status(500).json({ success: false, message: "Lỗi server." }); } });
 app.get('/api/user-info', async (req, res) => { try { const { username } = req.query; const userInfo = await User.findOne({ username }).select('username coins coins_by_brand assigned_brand'); if (!userInfo) return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" }); res.json({ success: true, userInfo }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server." }); } });
 app.get('/api/users', async (req, res) => { try { const { admin_id } = req.query; if (!admin_id) return res.status(400).json({ success: false, message: "Thiếu thông tin admin." }); const users = await User.find({ managed_by_admin_ids: admin_id }).select('_id username coins_by_brand'); res.json({ success: true, users }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server" }); } });
 app.post('/api/link-user', async (req, res) => { try { const { adminId, username } = req.body; if (!adminId || !username) return res.status(400).json({ success: false, message: "Vui lòng nhập tên tài khoản." }); const user = await User.findOne({ username, is_admin: false }); if (!user) return res.status(404).json({ success: false, message: `Tài khoản "${username}" không tồn tại.` }); if (user.managed_by_admin_ids.includes(adminId)) { return res.status(409).json({ success: false, message: `Tài khoản "${username}" đã có trong danh sách quản lý của bạn.` }); } await User.updateOne({ _id: user._id }, { $push: { managed_by_admin_ids: adminId } }); res.json({ success: true, message: `Thêm tài khoản "${username}" vào danh sách quản lý thành công!` }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server khi cập nhật." }); } });
-app.post('/api/delete-user', async (req, res) => { try { const { userId, adminId } = req.body; if (!userId || !adminId) return res.status(400).json({ success: false, message: "Thiếu thông tin." }); const result = await User.updateOne( { _id: userId }, { $pull: { managed_by_admin_ids: adminId } } ); if (result.modifiedCount === 0) { return res.status(403).json({ success: false, message: "User không có trong danh sách quản lý của bạn." }); } res.json({ success: true, message: "Xóa user khỏi danh sách quản lý thành công!" }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server." }); } });
+app.post('/api/delete-user', async (req, res) => { try { const { userId, adminId } = req.body; if (!userId || !adminId) return res.status(400).json({ success: false, message: "Thiếu thông tin." }); const result = await User.updateOne({ _id: userId }, { $pull: { managed_by_admin_ids: adminId } }); if (result.modifiedCount === 0) { return res.status(403).json({ success: false, message: "User không có trong danh sách quản lý của bạn." }); } res.json({ success: true, message: "Xóa user khỏi danh sách quản lý thành công!" }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server." }); } });
 app.post('/api/add-coins-to-user', async (req, res) => { try { const { userId, amount, adminId } = req.body; if (!adminId || !userId) { return res.status(400).json({ success: false, message: "Thiếu thông tin Admin hoặc User." }); } const amountToAdd = parseInt(amount, 10); if (isNaN(amountToAdd) || amountToAdd === 0) { return res.status(400).json({ success: false, message: "Số Token thay đổi không hợp lệ." }); } const admin = await User.findById(adminId); const user = await User.findById(userId); if (!admin || !user) { return res.status(404).json({ success: false, message: "Không tìm thấy Admin hoặc User." }); } const brandName = admin.assigned_brand; if (!admin.is_super_admin && !brandName) { return res.status(403).json({ success: false, message: "Tài khoản Admin này chưa được gán cho SẢNH GAME nào." }); } if (!admin.is_super_admin && amountToAdd > 0) { if (admin.coins < amountToAdd) { return res.status(400).json({ success: false, message: `Không đủ Token. Bạn chỉ còn ${admin.coins} Token để cấp.` }); } } const currentBrandCoins = user.coins_by_brand.get(brandName) || 0; const newCoinBalance = currentBrandCoins + amountToAdd; if (newCoinBalance < 0) { return res.status(400).json({ success: false, message: "Không thể thu hồi nhiều hơn số Token người dùng đang có." }); } if (!admin.is_super_admin) { admin.coins -= amountToAdd; await admin.save(); } user.coins_by_brand.set(brandName, newCoinBalance); user.markModified('coins_by_brand'); await user.save(); const actionText = amountToAdd > 0 ? `Cấp thêm ${amountToAdd}` : `Thu hồi ${-amountToAdd}`; res.json({ success: true, message: `${actionText} Token cho ${user.username} thành công!`, newTotal: newCoinBalance }); } catch (error) { console.error("Add coins error:", error); res.status(500).json({ success: false, message: "Lỗi server khi cập nhật Token." }); } });
 app.post('/api/revoke-all-coins-from-user', async (req, res) => { try { const { userId, adminId } = req.body; if (!adminId || !userId) { return res.status(400).json({ success: false, message: "Thiếu thông tin Admin hoặc User." }); } const [admin, user] = await Promise.all([ User.findById(adminId), User.findById(userId) ]); if (!admin || !user) { return res.status(404).json({ success: false, message: "Không tìm thấy Admin hoặc User." }); } const brandName = admin.assigned_brand; if (!admin.is_super_admin && !brandName) { return res.status(403).json({ success: false, message: "Tài khoản Admin này chưa được gán cho SẢNH GAME nào." }); } const coinsToRevoke = user.coins_by_brand.get(brandName) || 0; if (coinsToRevoke === 0) { return res.status(400).json({ success: false, message: `${user.username} không có Token nào tại sảnh ${brandName} để thu hồi.` }); } if (!admin.is_super_admin) { admin.coins += coinsToRevoke; } user.coins_by_brand.set(brandName, 0); user.markModified('coins_by_brand'); await Promise.all([admin.save(), user.save()]); res.json({ success: true, message: `Thu hồi thành công ${coinsToRevoke} Token từ ${user.username} tại sảnh ${brandName}.`, revokedAmount: coinsToRevoke }); } catch (error) { console.error("Revoke all coins error:", error); res.status(500).json({ success: false, message: "Lỗi server khi thu hồi Token." }); } });
 app.get('/api/sub-admins', async (req, res) => { try { const { creator_id } = req.query; if (!creator_id) { return res.status(400).json({ success: false, message: "Thiếu thông tin xác thực Super Admin." }); } const subAdmins = await User.find({ is_admin: true, is_super_admin: false, created_by_super_admin_id: creator_id }).select('_id username coins assigned_brand createdAt'); res.json({ success: true, admins: subAdmins }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server khi lấy danh sách admin." }); } });
@@ -163,7 +88,13 @@ app.post('/api/update-lobby', upload.single('logo'), async (req, res) => { try {
 app.get('/api/games', async (req, res) => { try { const { lobby_id } = req.query; if (!lobby_id) return res.status(400).json({ success: false, message: "Thiếu ID của sảnh" }); const games = await Game.find({ lobby_id }); res.json({ success: true, games }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server khi lấy game" }); } });
 app.post('/api/update-game', upload.single('image'), async (req, res) => { try { const { game_id } = req.body; if (!game_id) return res.status(400).json({ success: false, message: 'Thiếu ID của game.' }); if (!req.file) return res.status(400).json({ success: false, message: 'Vui lòng chọn ảnh game mới.' }); const game = await Game.findById(game_id); if (!game) return res.status(404).json({ success: false, message: 'Không tìm thấy game.' }); const oldImageUrl = game.image_url; if (oldImageUrl) { try { const oldFilename = path.basename(oldImageUrl); const oldFilePath = path.join(UPLOADS_DIR, oldFilename); if (fs.existsSync(oldFilePath)) { fs.unlinkSync(oldFilePath); console.log(`Successfully deleted old game image from disk: ${oldFilePath}`); } } catch (deleteError) { console.error("Could not delete old game image from disk:", deleteError.message); } } const newImageUrl = `/uploads/${req.file.filename}`; await Game.updateOne({ _id: game_id }, { $set: { image_url: newImageUrl } }); delete lobbyRatesCache[game.lobby_id.toString()]; res.json({ success: true, message: 'Cập nhật ảnh game thành công!' }); } catch (error) { console.error("Lỗi khi cập nhật game:", error); res.status(500).json({ success: false, message: 'Lỗi server khi cập nhật game.' }); } });
 app.get('/api/games-with-rates', async (req, res) => { try { const { lobby_id } = req.query; if (!lobby_id) return res.status(400).json({ success: false, message: "Thiếu ID của sảnh" }); const now = Date.now(); const cachedData = lobbyRatesCache[lobby_id]; if (cachedData && (now - cachedData.timestamp < ONE_HOUR_IN_MS)) { return res.json({ success: true, games: cachedData.games }); } const games = await Game.find({ lobby_id }).lean(); if (games.length > 0) { let gamesWithRates = games.map(game => ({ ...game, winRate: Math.floor(Math.random() * (85 - 10 + 1)) + 10 })); const randomHighRateCount = Math.floor(Math.random() * 4) + 2; const highRateCount = Math.min(games.length, randomHighRateCount); const indices = [...Array(games.length).keys()].sort(() => 0.5 - Math.random()); for (let i = 0; i < highRateCount; i++) { const gameIndexToBoost = indices[i]; gamesWithRates[gameIndexToBoost].winRate = Math.floor(Math.random() * (95 - 86 + 1)) + 86; } gamesWithRates.sort(() => 0.5 - Math.random()); lobbyRatesCache[lobby_id] = { timestamp: now, games: gamesWithRates }; res.json({ success: true, games: gamesWithRates }); } else { res.json({ success: true, games: [] }); } } catch (error) { res.status(500).json({ success: false, message: "Lỗi server" }); } });
-app.post('/api/analyze-game', async (req, res) => { try { const { username, winRate, brandName } = req.body; if (!username || !winRate || !brandName) return res.status(400).json({ success: false, message: "Thiếu thông tin để phân tích." }); const ANALYSIS_COST = 4; const user = await User.findOne({ username }); if (!user) return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." }); const currentBrandCoins = user.coins_by_brand.get(brandName) || 0; if (currentBrandCoins < ANALYSIS_COST) { return res.json({ success: false, message: `Không đủ Token cho ${brandName}! Bạn cần ${ANALYSIS_COST} Token.` }); } const newCoinBalance = currentBrandCoins - ANALYSIS_COST; user.coins_by_brand.set(brandName, newCoinBalance); user.markModified('coins_by_brand'); await user.save(); const baseRate = parseInt(winRate, 10); const boostedRate = Math.floor(Math.random() * (98 - baseRate + 1)) + baseRate; const finalAnalysisResult = Math.min(98, boostedRate); res.json({ success: true, message: "Phân tích thành công!", newCoinBalance, analysisResult: finalAnalysisResult }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server khi phân tích." }); } });
+
+// === CẬP NHẬT: Chi phí phân tích và duy trì ===
+const ANALYSIS_COST = 10;
+const RECURRING_COST = 10;
+
+app.post('/api/analyze-game', async (req, res) => { try { const { username, winRate, brandName } = req.body; if (!username || !winRate || !brandName) return res.status(400).json({ success: false, message: "Thiếu thông tin để phân tích." }); const user = await User.findOne({ username }); if (!user) return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." }); const currentBrandCoins = user.coins_by_brand.get(brandName) || 0; if (currentBrandCoins < ANALYSIS_COST) { return res.json({ success: false, message: `Không đủ Token cho ${brandName}! Bạn cần ${ANALYSIS_COST} Token.`, outOfTokens: true }); } const newCoinBalance = currentBrandCoins - ANALYSIS_COST; user.coins_by_brand.set(brandName, newCoinBalance); user.markModified('coins_by_brand'); await user.save(); const baseRate = parseInt(winRate, 10); const boostedRate = Math.floor(Math.random() * (98 - baseRate + 1)) + baseRate; const finalAnalysisResult = Math.min(98, boostedRate); res.json({ success: true, message: "Phân tích thành công!", newCoinBalance, analysisResult: finalAnalysisResult }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server khi phân tích." }); } });
+app.post('/api/deduct-recurring-token', async (req, res) => { try { const { username, brandName } = req.body; if (!username || !brandName) { return res.status(400).json({ success: false, message: "Thiếu thông tin người dùng hoặc sảnh game." }); } const user = await User.findOne({ username }); if (!user) { return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." }); } const currentBrandCoins = user.coins_by_brand.get(brandName) || 0; if (currentBrandCoins < RECURRING_COST) { return res.json({ success: false, message: `Hết Token. Việc phân tích đã dừng lại.`, outOfTokens: true }); } const newCoinBalance = currentBrandCoins - RECURRING_COST; user.coins_by_brand.set(brandName, newCoinBalance); user.markModified('coins_by_brand'); await user.save(); res.json({ success: true, message: "Đã trừ 10 Token duy trì phân tích.", newCoinBalance }); } catch (error) { console.error("Lỗi khi trừ Token định kỳ:", error); res.status(500).json({ success: false, message: "Lỗi server khi trừ Token." }); } });
 
 // --- PHẦN 4: KHỞI ĐỘNG SERVER ---
 app.listen(port, () => {
