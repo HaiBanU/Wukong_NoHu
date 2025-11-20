@@ -50,6 +50,15 @@
             <button id="next-btn" class="control-btn">NEXT <span class="arrow">&#9654;</span></button>
         </div>
     </main>
+    
+    <div id="alertModal" class="modal">
+        <div class="modal-content fadeIn">
+            <span class="close-btn" id="closeAlertModal">&times;</span>
+            <h3 style="color: var(--primary-red); text-align: center;">Thông Báo</h3>
+            <p id="alertModalMessage" style="text-align: center; margin-top: 15px; line-height: 1.6;"></p>
+            <button id="confirmAlertModal" class="btn-primary" style="margin-top: 20px;">Đã Hiểu</button>
+        </div>
+    </div>
 
     <div class="terminal-notification fadeIn" style="animation-delay: 0.5s;">
         <div class="terminal-bot-icon"><img src="/assets/images/bot-icon.png" alt="Bot Icon"></div>
@@ -63,21 +72,34 @@
         document.querySelector('.logout-button').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
         function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
         
-        const gameBrands = [ { name: 'AU88', logo: 'au88.png' }, { name: 'MB66', logo: 'mb66.png' }, { name: 'MM88', logo: 'mm88.png' }, { name: 'RR88', logo: 'rr88.png' }, { name: 'XX88', logo: 'xx88.png' }, { name: 'QH88', logo: 'qh88.png' }, { name: 'F8BET', logo: 'f8bet.png' }, { name: 'SHBET', logo: 'shbet.png' }, { name: '188BET', logo: '188bet.png' }, { name: 'FLY88', logo: 'fly88.png' }, { name: 'QQ88', logo: 'qq88.png' }, { name: 'U888', logo: 'u888.png' }, { name: 'BL555', logo: 'bl555.png' } ];
+        const alertModal = document.getElementById('alertModal');
+        const alertModalMessage = document.getElementById('alertModalMessage');
+        const closeAlertModalBtn = document.getElementById('closeAlertModal');
+        const confirmAlertModalBtn = document.getElementById('confirmAlertModal');
 
+        function showAlertModal(message) {
+            alertModalMessage.textContent = message;
+            alertModal.style.display = 'flex';
+        }
+
+        function hideAlertModal() {
+            alertModal.style.display = 'none';
+        }
+
+        closeAlertModalBtn.onclick = hideAlertModal;
+        confirmAlertModalBtn.onclick = hideAlertModal;
+        window.onclick = (event) => {
+            if (event.target == alertModal) {
+                hideAlertModal();
+            }
+        }
+        
         window.onload = async () => {
             updateClock();
             setInterval(updateClock, 1000);
             
             const terminalMessages = [ 
-                "Khởi tạo Giao thức Wukong... Hoàn tất.",
-                "Xác thực danh tính Chỉ Huy... Thành công.",
-                "Đang tải danh sách các SẢNH GAME đối tác...",
-                "Tất cả module phân tích đã được nạp.",
-                "Kết nối an toàn tới máy chủ trung tâm đã được thiết lập.",
-                "Hiệu suất hệ thống: 100%. Sẵn sàng nhận lệnh.",
-                "Vui lòng chọn một mục tiêu để bắt đầu đồng bộ hóa dữ liệu.",
-                "Dữ liệu là chìa khóa. Hãy chọn đúng cánh cửa."
+                "Khởi tạo Giao thức Wukong... Hoàn tất.", "Xác thực danh tính Chỉ Huy... Thành công.", "Đang tải danh sách các SẢNH GAME đối tác...", "Tất cả module phân tích đã được nạp.", "Kết nối an toàn tới máy chủ trung tâm đã được thiết lập.", "Hiệu suất hệ thống: 100%. Sẵn sàng nhận lệnh.", "Vui lòng chọn một mục tiêu để bắt đầu đồng bộ hóa dữ liệu.", "Dữ liệu là chìa khóa. Hãy chọn đúng cánh cửa."
             ];
             let lastMessageIndex = -1;
             let typingInterval;
@@ -100,117 +122,107 @@
             if (!username) { window.location.href = '/'; return; }
 
             try {
-                // Sử dụng Promise.all để gọi cả 2 API cùng lúc cho nhanh hơn
-                const [userRes, priorityRes] = await Promise.all([
+                const [userRes, brandsRes] = await Promise.all([
                     fetch(`/api/user-info?username=${username}`),
-                    fetch(`/api/user-brand-priority?username=${username}`) // Gọi API mới
+                    fetch(`/api/brands-with-rates?username=${username}`)
                 ]);
 
                 const userData = await userRes.json();
-                const priorityData = await priorityRes.json();
+                const brandsData = await brandsRes.json();
 
                 if (userData.success) {
                     document.getElementById('welcome-message').textContent = `Chào, ${userData.userInfo.username}!`;
-                    document.getElementById('coin-display').textContent = `Token: ${userData.userInfo.coins}`;
+                    document.getElementById('coin-display').textContent = `Token: ${userData.userInfo.coins || 0}`;
                 }
                 
-                // Lấy danh sách sảnh ưu tiên từ API
-                const priorityBrands = priorityData.success ? priorityData.priorityBrands : [];
-                
-                // Logic sắp xếp lại mảng gameBrands
-                let sortedGameBrands = [...gameBrands]; // Tạo một bản sao để sắp xếp
-                if (priorityBrands.length > 0) {
-                    // Lọc ra các sảnh ưu tiên và các sảnh còn lại
-                    const priorityBrandObjects = [];
-                    const otherBrands = [];
-
-                    gameBrands.forEach(brand => {
-                        const priorityIndex = priorityBrands.indexOf(brand.name);
-                        if (priorityIndex !== -1) {
-                            // Nếu là sảnh ưu tiên, lưu lại cùng với vị trí của nó
-                            priorityBrandObjects[priorityIndex] = brand;
-                        } else {
-                            otherBrands.push(brand);
-                        }
-                    });
-                    
-                    // Ghép mảng ưu tiên (đã được sắp xếp) với mảng còn lại
-                    sortedGameBrands = [...priorityBrandObjects.filter(b => b), ...otherBrands];
+                if (!brandsData.success) {
+                    throw new Error(brandsData.message);
                 }
+                
+                const sortedGameBrands = brandsData.brands;
+                
+                // === THAY ĐỔI QUAN TRỌNG: Lấy `priorityBrand` từ API ===
+                // Nó sẽ là tên sảnh (VD: 'MM88') hoặc là `null`
+                const priorityBrand = brandsData.priorityBrand;
                 
                 const slider = document.getElementById('brand-slider');
                 const prevBtn = document.getElementById('prev-btn');
                 const nextBtn = document.getElementById('next-btn');
                 
-                // Sử dụng mảng ĐÃ SẮP XẾP để tạo HTML
                 slider.innerHTML = sortedGameBrands.map(brand => `
-    <div class="brand-card" data-brand-name="${brand.name}">
-        <div class="brand-card-inner">
-             <div class="logo-background">
-                <img class="brand-logo" src="/assets/logos/${brand.logo}" alt="${brand.name}">
-            </div>
-            <div class="brand-name">${brand.name}</div>
-        </div>
-    </div>`
-).join('');
+                    <div class="brand-card" data-brand-name="${brand.name}">
+                        <div class="brand-card-inner">
+                             <div class="logo-background">
+                                <img class="brand-logo" src="/assets/logos/${brand.logo}" alt="${brand.name}">
+                            </div>
+                            <div class="brand-name">${brand.name}</div>
+                            <div class="brand-percentage">${brand.percentage}%</div>
+                        </div>
+                    </div>`
+                ).join('');
 
                 const cards = document.querySelectorAll('.brand-card');
-                
-                // <<< BẮT ĐẦU CẬP NHẬT LOGIC JS CHO 5 THẺ >>>
                 let activeIndex = 0;
 
                 function updateCarousel() {
                     cards.forEach((card, i) => {
-                        // Xóa tất cả các lớp vị trí cũ
                         card.classList.remove('active', 'prev', 'next', 'prev2', 'next2');
-
-                        // Tính toán chỉ số cho cả 5 vị trí
                         const prev2Index = (activeIndex - 2 + cards.length) % cards.length;
                         const prevIndex = (activeIndex - 1 + cards.length) % cards.length;
                         const nextIndex = (activeIndex + 1) % cards.length;
                         const next2Index = (activeIndex + 2) % cards.length;
                         
-                        // Gán lớp mới dựa trên vị trí
-                        if (i === activeIndex) {
-                            card.classList.add('active');
-                        } else if (i === prevIndex) {
-                            card.classList.add('prev');
-                        } else if (i === nextIndex) {
-                            card.classList.add('next');
-                        } else if (i === prev2Index) {
-                            card.classList.add('prev2');
-                        } else if (i === next2Index) {
-                            card.classList.add('next2');
-                        }
+                        if (i === activeIndex) card.classList.add('active');
+                        else if (i === prevIndex) card.classList.add('prev');
+                        else if (i === nextIndex) card.classList.add('next');
+                        else if (i === prev2Index) card.classList.add('prev2');
+                        else if (i === next2Index) card.classList.add('next2');
                     });
                 }
 
                 nextBtn.addEventListener('click', () => { activeIndex = (activeIndex + 1) % cards.length; updateCarousel(); });
                 prevBtn.addEventListener('click', () => { activeIndex = (activeIndex - 1 + cards.length) % cards.length; updateCarousel(); });
                 
+                // === THAY ĐỔI QUAN TRỌNG: Logic click được cập nhật ===
                 slider.addEventListener('click', (e) => {
                     const clickedCard = e.target.closest('.brand-card');
                     if (!clickedCard) return;
 
-                    if (clickedCard.classList.contains('active')) {
-                        const brandName = clickedCard.dataset.brandName;
+                    const brandName = clickedCard.dataset.brandName;
+
+                    // Xử lý xoay carousel trước
+                    if (!clickedCard.classList.contains('active')) {
+                        if (clickedCard.classList.contains('next') || clickedCard.classList.contains('next2')) { 
+                            activeIndex = (activeIndex + 1) % cards.length; 
+                        } else if (clickedCard.classList.contains('prev') || clickedCard.classList.contains('prev2')) { 
+                            activeIndex = (activeIndex - 1 + cards.length) % cards.length; 
+                        }
+                        updateCarousel();
+                        return; // Dừng lại sau khi xoay
+                    }
+
+                    // Nếu thẻ đã ở chính giữa (active), thì kiểm tra quyền truy cập
+                    // Case 1: Người dùng có admin quản lý (priorityBrand có giá trị)
+                    if (priorityBrand) {
+                        if (brandName === priorityBrand) {
+                            // Nhấn đúng sảnh ưu tiên -> Cho vào
+                            sessionStorage.setItem('selectedBrand', brandName);
+                            window.location.href = `/dashboard.html`;
+                        } else {
+                            // Nhấn sai sảnh -> Hiển thị cảnh báo
+                            showAlertModal(`Sảnh ${brandName} có tỷ lệ khá thấp. Vui lòng chọn sảnh ${priorityBrand} để có trải nghiệm tốt nhất!`);
+                        }
+                    } 
+                    // Case 2: Người dùng tự do, chưa có admin (priorityBrand là null)
+                    else {
+                        // Cho phép vào bất kỳ sảnh nào
                         sessionStorage.setItem('selectedBrand', brandName);
                         window.location.href = `/dashboard.html`;
-                    } 
-                    // Nếu nhấn vào bất kỳ thẻ nào bên phải, di chuyển sang phải 1 bước
-                    else if (clickedCard.classList.contains('next') || clickedCard.classList.contains('next2')) { 
-                        activeIndex = (activeIndex + 1) % cards.length; 
-                        updateCarousel(); 
-                    }
-                    // Nếu nhấn vào bất kỳ thẻ nào bên trái, di chuyển sang trái 1 bước
-                    else if (clickedCard.classList.contains('prev') || clickedCard.classList.contains('prev2')) { 
-                        activeIndex = (activeIndex - 1 + cards.length) % cards.length; 
-                        updateCarousel(); 
                     }
                 });
 
+
                 updateCarousel();
-                // <<< KẾT THÚC CẬP NHẬT LOGIC JS CHO 5 THẺ >>>
 
             } catch (e) {
                 console.error("Lỗi khi tải dữ liệu trang chọn sảnh:", e);

@@ -79,7 +79,7 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 25px;
+    gap: 20px; /* Giảm gap để có không gian cho percentage */
     padding: 20px;
     box-sizing: border-box;
 }
@@ -87,6 +87,21 @@ body {
 .logo-background { width: 150px; height: 150px; background-color: #fff; border-radius: 15px; display: flex; justify-content: center; align-items: center; padding: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
 .brand-logo { max-width: 100%; max-height: 100%; object-fit: contain; }
 .brand-name { font-size: 1.5em; font-weight: 700; font-family: 'Poppins', sans-serif; color: var(--primary-red); text-shadow: 0 0 15px var(--primary-red); }
+
+/* === BẮT ĐẦU: STYLE MỚI CHO TỶ LỆ % === */
+.brand-percentage {
+    background: linear-gradient(45deg, #00b894, #00ff8c);
+    color: #111;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 1.4em;
+    padding: 8px 25px;
+    border-radius: 50px;
+    box-shadow: 0 0 15px rgba(0, 255, 140, 0.8);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    border: 2px solid #fff;
+}
+/* === KẾT THÚC: STYLE MỚI === */
 
 /* ======================================= */
 /* === VỊ TRÍ 3D (DESKTOP) - PHIÊN BẢN 5 THẺ === */
@@ -227,6 +242,11 @@ body {
         padding: 15px 0; /* Tăng chiều cao thanh tiêu đề */
         text-align: center;
         text-transform: uppercase;
+    }
+
+    /* === Ẩn tỷ lệ % trên mobile để giao diện gọn gàng hơn === */
+    .brand-percentage {
+        display: none;
     }
 
     /* Ẩn nút điều khiển Back/Next trên mobile */

@@ -1,5 +1,8 @@
 // --- START OF FILE server.js (ĐÃ CẬP NHẬT ĐỂ SỬ DỤNG RENDER DISK) ---
 
+// === THÊM MỚI: Dòng này phải ở trên cùng để nạp biến môi trường ===
+require('dotenv').config();
+
 // --- PHẦN 1: KHAI BÁO VÀ THIẾT LẬP ---
 const express = require('express');
 const mongoose = require('mongoose');
@@ -33,7 +36,11 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 // Cấu hình Multer để lưu file vào ổ đĩa cục bộ
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, UPLOADS_DIR); // Lưu file vào thư mục đã định nghĩa
+        // Đảm bảo thư mục tồn tại
+        if (!fs.existsSync(UPLOADS_DIR)){
+            fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+        }
+        cb(null, UPLOADS_DIR);
     },
     filename: function (req, file, cb) {
         // Tạo tên file duy nhất để tránh trùng lặp
@@ -44,6 +51,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Sử dụng biến môi trường của Render (bạn cần set MONGODB_URI trong tab Environment của Render)
+// KHI CHẠY LOCAL, NÓ SẼ LẤY TỪ TỆP .env NHỜ DÒNG require('dotenv').config() Ở TRÊN
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => { 
         console.log('Connected to the MongoDB database.'); 
@@ -68,9 +76,69 @@ async function migrateOrphanedSubAdmins() { try { const originalSuperAdmin = awa
 app.post('/api/register', async (req, res) => { try { const { username, password } = req.body; if (!username || !password) { return res.status(400).json({ success: false, message: 'Tên đăng nhập và mật khẩu không được để trống' }); } if (username.length <= 4) { return res.status(400).json({ success: false, message: 'Tên đăng nhập phải có nhiều hơn 4 ký tự' }); } if (password.length <= 6) { return res.status(400).json({ success: false, message: 'Mật khẩu phải có nhiều hơn 6 ký tự' }); } const existingUser = await User.findOne({ username }); if (existingUser) { return res.status(409).json({ success: false, message: 'Tên đăng nhập đã tồn tại' }); } const hashedPassword = await bcrypt.hash(password, 10); await new User({ username, password: hashedPassword }).save(); res.json({ success: true, message: 'Đăng ký thành công!' }); } catch (error) { res.status(500).json({ success: false, message: 'Lỗi server khi tạo tài khoản' }); } });
 app.post('/api/login', async (req, res) => { try { const { username, password } = req.body; const user = await User.findOne({ username }); if (!user) return res.status(404).json({ success: false, message: 'Tên đăng nhập không tồn tại' }); const isMatch = await bcrypt.compare(password, user.password); if (isMatch) { res.json({ success: true, message: 'Đăng nhập thành công!', isAdmin: user.is_admin, isSuperAdmin: user.is_super_admin, userId: user.is_admin ? user._id : null }); } else { res.status(401).json({ success: false, message: 'Mật khẩu không chính xác' }); } } catch (error) { res.status(500).json({ success: false, message: 'Lỗi server' }); } });
 app.get('/api/brands', (req, res) => { res.json({ success: true, brands: gameBrands }); });
+
+// === BẮT ĐẦU: API ĐƯỢC CẬP NHẬT ===
+app.get('/api/brands-with-rates', async (req, res) => {
+    try {
+        const { username } = req.query;
+        if (!username) {
+            return res.status(400).json({ success: false, message: "Thiếu tên người dùng." });
+        }
+
+        const user = await User.findOne({ username }).populate('managed_by_admin_ids', 'assigned_brand');
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
+        }
+
+        // Tìm sảnh ưu tiên (chỉ lấy cái đầu tiên nếu có nhiều)
+        const priorityBrand = user.managed_by_admin_ids
+            .map(admin => admin.assigned_brand)
+            .find(brand => brand); // Lấy brand đầu tiên khác null/undefined
+
+        // Tạo danh sách sảnh với tỷ lệ % ngẫu nhiên
+        let brandsWithRates = gameBrands.map(brand => ({
+            ...brand,
+            // Tỷ lệ ngẫu nhiên cho các sảnh thường: 70% - 89%
+            percentage: Math.floor(Math.random() * 20) + 70, 
+        }));
+
+        // Nếu có sảnh ưu tiên, xử lý đặc biệt
+        if (priorityBrand) {
+            let priorityBrandIndex = -1;
+            
+            // Tìm sảnh ưu tiên trong danh sách và gán tỷ lệ cao
+            brandsWithRates.forEach((brand, index) => {
+                if (brand.name === priorityBrand) {
+                    // Tỷ lệ cao cho sảnh ưu tiên: 92% - 98%
+                    brand.percentage = Math.floor(Math.random() * 7) + 92;
+                    priorityBrandIndex = index;
+                }
+            });
+
+            // Đưa sảnh ưu tiên lên đầu danh sách
+            if (priorityBrandIndex > -1) {
+                const [priorityItem] = brandsWithRates.splice(priorityBrandIndex, 1);
+                brandsWithRates.unshift(priorityItem);
+            }
+        }
+
+        // === THAY ĐỔI QUAN TRỌNG: Gửi cả `priorityBrand` về cho client ===
+        res.json({
+            success: true,
+            brands: brandsWithRates,
+            priorityBrand: priorityBrand || null // Gửi tên sảnh, hoặc null nếu không có
+        });
+
+    } catch (error) {
+        console.error("Lỗi khi lấy sảnh với tỷ lệ:", error);
+        res.status(500).json({ success: false, message: "Lỗi server." });
+    }
+});
+// === KẾT THÚC: API ĐƯỢC CẬP NHẬT ===
+
+
 app.get('/api/user-info', async (req, res) => { try { const { username } = req.query; const userInfo = await User.findOne({ username }).select('username coins coins_by_brand assigned_brand'); if (!userInfo) return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" }); res.json({ success: true, userInfo }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server." }); } });
 app.get('/api/users', async (req, res) => { try { const { admin_id } = req.query; if (!admin_id) return res.status(400).json({ success: false, message: "Thiếu thông tin admin." }); const users = await User.find({ managed_by_admin_ids: admin_id }).select('_id username coins_by_brand'); res.json({ success: true, users }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server" }); } });
-app.get('/api/user-brand-priority', async (req, res) => { try { const { username } = req.query; if (!username) { return res.status(400).json({ success: false, message: "Thiếu tên người dùng." }); } const user = await User.findOne({ username }).populate('managed_by_admin_ids', 'assigned_brand'); if (!user) { return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." }); } const priorityBrands = user.managed_by_admin_ids .map(admin => admin.assigned_brand) .filter(brand => brand); const uniquePriorityBrands = [...new Set(priorityBrands)]; res.json({ success: true, priorityBrands: uniquePriorityBrands }); } catch (error) { console.error("Lỗi khi lấy sảnh ưu tiên của user:", error); res.status(500).json({ success: false, message: "Lỗi server." }); } });
 app.post('/api/link-user', async (req, res) => { try { const { adminId, username } = req.body; if (!adminId || !username) return res.status(400).json({ success: false, message: "Vui lòng nhập tên tài khoản." }); const user = await User.findOne({ username, is_admin: false }); if (!user) return res.status(404).json({ success: false, message: `Tài khoản "${username}" không tồn tại.` }); if (user.managed_by_admin_ids.includes(adminId)) { return res.status(409).json({ success: false, message: `Tài khoản "${username}" đã có trong danh sách quản lý của bạn.` }); } await User.updateOne({ _id: user._id }, { $push: { managed_by_admin_ids: adminId } }); res.json({ success: true, message: `Thêm tài khoản "${username}" vào danh sách quản lý thành công!` }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server khi cập nhật." }); } });
 app.post('/api/delete-user', async (req, res) => { try { const { userId, adminId } = req.body; if (!userId || !adminId) return res.status(400).json({ success: false, message: "Thiếu thông tin." }); const result = await User.updateOne( { _id: userId }, { $pull: { managed_by_admin_ids: adminId } } ); if (result.modifiedCount === 0) { return res.status(403).json({ success: false, message: "User không có trong danh sách quản lý của bạn." }); } res.json({ success: true, message: "Xóa user khỏi danh sách quản lý thành công!" }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server." }); } });
 app.post('/api/add-coins-to-user', async (req, res) => { try { const { userId, amount, adminId } = req.body; if (!adminId || !userId) { return res.status(400).json({ success: false, message: "Thiếu thông tin Admin hoặc User." }); } const amountToAdd = parseInt(amount, 10); if (isNaN(amountToAdd) || amountToAdd === 0) { return res.status(400).json({ success: false, message: "Số Token thay đổi không hợp lệ." }); } const admin = await User.findById(adminId); const user = await User.findById(userId); if (!admin || !user) { return res.status(404).json({ success: false, message: "Không tìm thấy Admin hoặc User." }); } const brandName = admin.assigned_brand; if (!admin.is_super_admin && !brandName) { return res.status(403).json({ success: false, message: "Tài khoản Admin này chưa được gán cho SẢNH GAME nào." }); } if (!admin.is_super_admin && amountToAdd > 0) { if (admin.coins < amountToAdd) { return res.status(400).json({ success: false, message: `Không đủ Token. Bạn chỉ còn ${admin.coins} Token để cấp.` }); } } const currentBrandCoins = user.coins_by_brand.get(brandName) || 0; const newCoinBalance = currentBrandCoins + amountToAdd; if (newCoinBalance < 0) { return res.status(400).json({ success: false, message: "Không thể thu hồi nhiều hơn số Token người dùng đang có." }); } if (!admin.is_super_admin) { admin.coins -= amountToAdd; await admin.save(); } user.coins_by_brand.set(brandName, newCoinBalance); user.markModified('coins_by_brand'); await user.save(); const actionText = amountToAdd > 0 ? `Cấp thêm ${amountToAdd}` : `Thu hồi ${-amountToAdd}`; res.json({ success: true, message: `${actionText} Token cho ${user.username} thành công!`, newTotal: newCoinBalance }); } catch (error) { console.error("Add coins error:", error); res.status(500).json({ success: false, message: "Lỗi server khi cập nhật Token." }); } });
