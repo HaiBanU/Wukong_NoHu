@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Wukong Slot</title> <!-- Đã sửa -->
-    <link rel="icon" type="image/png" href="/assets/images/favicon.png"> <!-- Đã thêm -->
+     <title>Wukong Slot</title>
+    <link rel="icon" type="image/png" href="/assets/images/favicon.png">
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/user.css"> 
     <link rel="stylesheet" href="/css/brand-selection-final.css">
@@ -69,7 +69,12 @@
     </div>
 
     <script>
-        document.querySelector('.logout-button').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
+        document.querySelector('.logout-button').addEventListener('click', () => { 
+            localStorage.clear(); 
+            sessionStorage.clear(); // CẬP NHẬT
+            window.location.href = '/'; 
+        });
+
         function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
         
         const alertModal = document.getElementById('alertModal');
@@ -77,44 +82,20 @@
         const closeAlertModalBtn = document.getElementById('closeAlertModal');
         const confirmAlertModalBtn = document.getElementById('confirmAlertModal');
 
-        function showAlertModal(message) {
-            alertModalMessage.textContent = message;
-            alertModal.style.display = 'flex';
-        }
-
-        function hideAlertModal() {
-            alertModal.style.display = 'none';
-        }
-
+        function showAlertModal(message) { alertModalMessage.textContent = message; alertModal.style.display = 'flex'; }
+        function hideAlertModal() { alertModal.style.display = 'none'; }
         closeAlertModalBtn.onclick = hideAlertModal;
         confirmAlertModalBtn.onclick = hideAlertModal;
-        window.onclick = (event) => {
-            if (event.target == alertModal) {
-                hideAlertModal();
-            }
-        }
+        window.onclick = (event) => { if (event.target == alertModal) { hideAlertModal(); } }
         
         window.onload = async () => {
             updateClock();
             setInterval(updateClock, 1000);
             
-            const terminalMessages = [ 
-                "Khởi tạo Giao thức Wukong... Hoàn tất.", "Xác thực danh tính Chỉ Huy... Thành công.", "Đang tải danh sách các SẢNH GAME đối tác...", "Tất cả module phân tích đã được nạp.", "Kết nối an toàn tới máy chủ trung tâm đã được thiết lập.", "Hiệu suất hệ thống: 100%. Sẵn sàng nhận lệnh.", "Vui lòng chọn một mục tiêu để bắt đầu đồng bộ hóa dữ liệu.", "Dữ liệu là chìa khóa. Hãy chọn đúng cánh cửa."
-            ];
-            let lastMessageIndex = -1;
-            let typingInterval;
+            const terminalMessages = [ "Khởi tạo Giao thức Wukong... Hoàn tất.", "Xác thực danh tính Chỉ Huy... Thành công.", "Đang tải danh sách các SẢNH GAME đối tác...", "Tất cả module phân tích đã được nạp.", "Kết nối an toàn tới máy chủ trung tâm đã được thiết lập.", "Hiệu suất hệ thống: 100%. Sẵn sàng nhận lệnh.", "Vui lòng chọn một mục tiêu để bắt đầu đồng bộ hóa dữ liệu.", "Dữ liệu là chìa khóa. Hãy chọn đúng cánh cửa." ];
+            let lastMessageIndex = -1; let typingInterval;
             function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
-            function showNextTerminalMessage() { 
-                const messageEl = document.getElementById('terminal-message'); 
-                if (!messageEl) return;
-                let randomIndex;
-                do {
-                    randomIndex = Math.floor(Math.random() * terminalMessages.length);
-                } while (randomIndex === lastMessageIndex && terminalMessages.length > 1);
-                lastMessageIndex = randomIndex;
-                const messageToShow = terminalMessages[randomIndex]; 
-                typeMessage(messageEl, messageToShow); 
-            }
+            function showNextTerminalMessage() { const messageEl = document.getElementById('terminal-message'); if (!messageEl) return; let randomIndex; do { randomIndex = Math.floor(Math.random() * terminalMessages.length); } while (randomIndex === lastMessageIndex && terminalMessages.length > 1); lastMessageIndex = randomIndex; const messageToShow = terminalMessages[randomIndex]; typeMessage(messageEl, messageToShow); }
             showNextTerminalMessage();
             setInterval(showNextTerminalMessage, 8000);
 
@@ -132,23 +113,31 @@
 
                 if (userData.success) {
                     document.getElementById('welcome-message').textContent = `Chào, ${userData.userInfo.username}!`;
-                    document.getElementById('coin-display').textContent = `Token: ${userData.userInfo.coins || 0}`;
+                    
+                    // *** LOGIC ĐỒNG BỘ TOKEN MỚI ***
+                    const visualTokenCount = sessionStorage.getItem('wukongVisualTokenCount');
+                    const activeAnalysis = sessionStorage.getItem('wukongActiveAnalysis');
+
+                    if (activeAnalysis && visualTokenCount !== null) {
+                        // Nếu có phiên phân tích đang chạy, ưu tiên hiển thị token đã trừ giả lập
+                        document.getElementById('coin-display').textContent = `Token: ${visualTokenCount}`;
+                    } else {
+                        // Nếu không, hiển thị token thật từ server và dọn dẹp
+                        document.getElementById('coin-display').textContent = `Token: ${userData.userInfo.coins || 0}`;
+                        sessionStorage.removeItem('wukongVisualTokenCount');
+                        sessionStorage.removeItem('wukongActiveAnalysis');
+                    }
                 }
                 
-                if (!brandsData.success) {
-                    throw new Error(brandsData.message);
-                }
+                if (!brandsData.success) { throw new Error(brandsData.message); }
                 
                 const sortedGameBrands = brandsData.brands;
                 const priorityBrand = brandsData.priorityBrand;
-                
                 const slider = document.getElementById('brand-slider');
                 const prevBtn = document.getElementById('prev-btn');
                 const nextBtn = document.getElementById('next-btn');
                 
-                // === THAY ĐỔI: Thêm class `low` có điều kiện ===
                 slider.innerHTML = sortedGameBrands.map(brand => {
-                    // Xác định class màu sắc dựa trên tỷ lệ %
                     const percentageClass = brand.percentage < 70 ? 'low' : '';
                     return `
                     <div class="brand-card" data-brand-name="${brand.name}">
@@ -187,7 +176,6 @@
                 slider.addEventListener('click', (e) => {
                     const clickedCard = e.target.closest('.brand-card');
                     if (!clickedCard) return;
-
                     const brandName = clickedCard.dataset.brandName;
 
                     if (!clickedCard.classList.contains('active')) {
@@ -196,10 +184,8 @@
                         } else if (clickedCard.classList.contains('prev') || clickedCard.classList.contains('prev2')) { 
                             activeIndex = (activeIndex - 1 + cards.length) % cards.length; 
                         }
-                        updateCarousel();
-                        return;
+                        updateCarousel(); return;
                     }
-
                     if (priorityBrand) {
                         if (brandName === priorityBrand) {
                             sessionStorage.setItem('selectedBrand', brandName);
@@ -207,19 +193,13 @@
                         } else {
                             showAlertModal(`Sảnh ${brandName} có tỷ lệ khá thấp. Vui lòng chọn sảnh ${priorityBrand} để có trải nghiệm tốt nhất!`);
                         }
-                    } 
-                    else {
+                    } else {
                         sessionStorage.setItem('selectedBrand', brandName);
                         window.location.href = `/dashboard.html`;
                     }
                 });
-
-
                 updateCarousel();
-
-            } catch (e) {
-                console.error("Lỗi khi tải dữ liệu trang chọn sảnh:", e);
-            }
+            } catch (e) { console.error("Lỗi khi tải dữ liệu trang chọn sảnh:", e); }
         };
     </script>
     

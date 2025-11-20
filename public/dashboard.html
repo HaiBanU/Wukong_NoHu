@@ -1,19 +1,16 @@
-
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-     <title>Wukong Slot</title> <!-- Đã sửa -->
-    <link rel="icon" type="image/png" href="/assets/images/favicon.png"> <!-- Đã thêm -->
+     <title>Wukong Slot</title>
+    <link rel="icon" type="image/png" href="/assets/images/favicon.png">
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/user.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <script>
-    // === BẮT BUỘC KIỂM TRA ĐĂNG NHẬP ===
     if (!localStorage.getItem('username')) {
-        window.location.href = '/'; // Chuyển về trang đăng nhập
+        window.location.href = '/';
     }
 </script>
 <body class="dashboard-page">
@@ -60,64 +57,31 @@
     </div>
 
     <script>
-        document.querySelector('.logout-button').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
+        document.querySelector('.logout-button').addEventListener('click', () => { 
+            localStorage.clear(); 
+            sessionStorage.clear(); // CẬP NHẬT
+            window.location.href = '/'; 
+        });
+
         function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
         
-        // === NÂNG CẤP V4: HOÀN TOÀN MỚI NỘI DUNG TERMINAL ===
         let terminalMessages = [];
         let lastMessageIndex = -1;
         let typingInterval;
-
-        function generateLobbyMessages(lobbies = []) {
-            const messageTemplates = [
-                "Quét các sảnh game khả dụng trên toàn hệ thống...",
-                "Phân tích luồng dữ liệu sảnh theo thời gian thực.",
-                "Giám sát các biến động tỷ lệ RTP (Return-to-Player)...",
-                "Đang tìm kiếm các 'cửa sổ' cơ hội có tỷ lệ cao...",
-                "Calibrating predictive algorithms for current session.",
-                "Tối ưu hóa thuật toán dự báo cho phiên làm việc hiện tại.",
-                "Hệ thống đã sẵn sàng. Hãy chọn một sảnh để phân tích sâu."
-            ];
-
-            // Thêm các mẫu câu động
-            if (lobbies.length > 0) {
-                const randomLobby = lobbies[Math.floor(Math.random() * lobbies.length)];
-                messageTemplates.push(`Phát hiện tín hiệu Jackpot tại sảnh ${randomLobby.name}!`);
-                messageTemplates.push(`Hệ thống khuyến nghị truy cập sảnh ${randomLobby.name} ngay.`);
-                messageTemplates.push(`Dữ liệu cho thấy sảnh ${randomLobby.name} đang có biến động mạnh.`);
-            }
-            
-            // Trả về toàn bộ danh sách đã được làm mới
-            return messageTemplates;
-        }
-
+        function generateLobbyMessages(lobbies = []) { const messageTemplates = [ "Quét các sảnh game khả dụng trên toàn hệ thống...", "Phân tích luồng dữ liệu sảnh theo thời gian thực.", "Giám sát các biến động tỷ lệ RTP (Return-to-Player)...", "Đang tìm kiếm các 'cửa sổ' cơ hội có tỷ lệ cao...", "Calibrating predictive algorithms for current session.", "Tối ưu hóa thuật toán dự báo cho phiên làm việc hiện tại.", "Hệ thống đã sẵn sàng. Hãy chọn một sảnh để phân tích sâu." ]; if (lobbies.length > 0) { const randomLobby = lobbies[Math.floor(Math.random() * lobbies.length)]; messageTemplates.push(`Phát hiện tín hiệu Jackpot tại sảnh ${randomLobby.name}!`); messageTemplates.push(`Hệ thống khuyến nghị truy cập sảnh ${randomLobby.name} ngay.`); messageTemplates.push(`Dữ liệu cho thấy sảnh ${randomLobby.name} đang có biến động mạnh.`); } return messageTemplates; }
         function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
+        function showNextTerminalMessage() { const messageEl = document.getElementById('terminal-message'); if (!messageEl || terminalMessages.length === 0) return; let randomIndex; do { randomIndex = Math.floor(Math.random() * terminalMessages.length); } while (randomIndex === lastMessageIndex && terminalMessages.length > 1); lastMessageIndex = randomIndex; const messageToShow = terminalMessages[randomIndex]; typeMessage(messageEl, messageToShow); }
         
-        function showNextTerminalMessage() { 
-            const messageEl = document.getElementById('terminal-message'); 
-            if (!messageEl || terminalMessages.length === 0) return;
-            let randomIndex;
-            do {
-                randomIndex = Math.floor(Math.random() * terminalMessages.length);
-            } while (randomIndex === lastMessageIndex && terminalMessages.length > 1);
-            lastMessageIndex = randomIndex;
-            const messageToShow = terminalMessages[randomIndex]; 
-            typeMessage(messageEl, messageToShow); 
-        }
-        // === KẾT THÚC NÂNG CẤP ===
-
         window.onload = async () => {
             updateClock();
             setInterval(updateClock, 1000);
 
             const brandName = sessionStorage.getItem('selectedBrand');
-            
             if (!brandName) {
                 alert("Lỗi: Vui lòng chọn một trang game.");
                 window.location.href = '/brand-selection.html';
                 return;
             }
-            
             document.getElementById('main-title-header').textContent = `SẢNH GAME CỦA ${brandName.toUpperCase()}`;
 
             const username = localStorage.getItem('username');
@@ -133,15 +97,24 @@
             if (userData.success) {
                 document.getElementById('welcome-message').textContent = `Chào, ${userData.userInfo.username}!`;
                 
-                const userCoinsByBrand = userData.userInfo.coins_by_brand || {};
-                const coinsForCurrentBrand = userCoinsByBrand[brandName] || 0;
-                document.getElementById('coin-display').textContent = `Token: ${coinsForCurrentBrand}`;
+                // *** LOGIC ĐỒNG BỘ TOKEN MỚI ***
+                const visualTokenCount = sessionStorage.getItem('wukongVisualTokenCount');
+                const activeAnalysis = sessionStorage.getItem('wukongActiveAnalysis');
+
+                if (activeAnalysis && visualTokenCount !== null) {
+                    document.getElementById('coin-display').textContent = `Token: ${visualTokenCount}`;
+                } else {
+                    const userCoinsByBrand = userData.userInfo.coins_by_brand || {};
+                    const coinsForCurrentBrand = userCoinsByBrand[brandName] || 0;
+                    document.getElementById('coin-display').textContent = `Token: ${coinsForCurrentBrand}`;
+                    sessionStorage.removeItem('wukongVisualTokenCount');
+                    sessionStorage.removeItem('wukongActiveAnalysis');
+                }
             }
 
             const lobbyContainer = document.getElementById('lobby-container');
             lobbyContainer.innerHTML = '';
             if (lobbyData.success && lobbyData.lobbies.length > 0) {
-                // Cập nhật và kích hoạt Terminal với dữ liệu mới
                 terminalMessages = generateLobbyMessages(lobbyData.lobbies);
                 showNextTerminalMessage();
                 setInterval(showNextTerminalMessage, 10000);
@@ -151,16 +124,16 @@
                     card.href = `/games.html?lobby_id=${lobby._id}&lobby_name=${encodeURIComponent(lobby.name)}`;
                     card.className = 'game-card-enhanced dashboard-lobby-card';
                     card.innerHTML = `
-    <div class="game-card-inner-frame">
-        <div class="card-image-wrapper">
-            <img src="${lobby.logo_url}" alt="${lobby.name}" loading="lazy">
-        </div>
-    </div>
-    <div class="game-card-content">
-        <button class="action-button" style="background: linear-gradient(45deg, #d90429, #ef233c); margin-top: auto;">
-            ${lobby.name}
-        </button>
-    </div>`;
+                    <div class="game-card-inner-frame">
+                        <div class="card-image-wrapper">
+                            <img src="${lobby.logo_url}" alt="${lobby.name}" loading="lazy">
+                        </div>
+                    </div>
+                    <div class="game-card-content">
+                        <button class="action-button" style="background: linear-gradient(45deg, #d90429, #ef233c); margin-top: auto;">
+                            ${lobby.name}
+                        </button>
+                    </div>`;
                     lobbyContainer.appendChild(card);
                 });
             } else {

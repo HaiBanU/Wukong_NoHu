@@ -1,4 +1,4 @@
-// --- START OF FILE analysis.js (PHIÊN BẢN NÂNG CẤP HIỂN THỊ TRỪ TOKEN THỜI GIAN THỰC) ---
+// --- START OF FILE analysis.js (PHIÊN BẢN CUỐI CÙNG - SỬA LỖI ĐỒNG BỘ KHI QUAY LẠI) ---
 
 window.onload = () => {
     // === LẤY CÁC PHẦN TỬ DOM ===
@@ -34,11 +34,12 @@ window.onload = () => {
 
     // === BIẾN QUẢN LÝ TRẠNG THÁI ===
     let isAnalyzing = false;
-    let analysisTimerId = null; // Timer 60s gọi backend
-    let countdownIntervalId = null; // Timer 10 phút đếm ngược
-    let visualDeductionIntervalId = null; // *** MỚI: Timer 6s để cập nhật giao diện
-    let displayedTokens = 0; // *** MỚI: Biến lưu số token đang hiển thị
+    let analysisTimerId = null;
+    let countdownIntervalId = null;
+    let visualDeductionIntervalId = null;
+    let displayedTokens = 0;
     const ACTIVE_ANALYSIS_KEY = 'wukongActiveAnalysis';
+    const VISUAL_TOKEN_KEY = 'wukongVisualTokenCount';
 
     // === CÁC HÀM TIỆN ÍCH ĐỒ HỌA ===
     const createParticleBurstEffect = () => { const container = document.querySelector('.particle-burst'); if (!container) return; container.innerHTML = ''; const particleCount = 40; const radius = 200; for (let i = 0; i < particleCount; i++) { const particle = document.createElement('div'); particle.className = 'particle'; const angle = Math.random() * 360; const duration = Math.random() * 1.5 + 1; const delay = Math.random() * 2.5; particle.style.setProperty('--angle', `${angle}deg`); particle.style.setProperty('--duration', `${duration}s`); particle.style.setProperty('--delay', `${delay}s`); particle.style.setProperty('--radius', `${radius}px`); container.appendChild(particle); } };
@@ -46,27 +47,49 @@ window.onload = () => {
     const createLightningField = (count = 6) => { const paths=["M15 0 L10 20 L18 20 L12 45 L22 45 L8 75 L16 75 L11 100","M18 0 L12 25 L20 25 L10 50 L25 50 L5 80 L15 80 L10 100","M12 0 L18 30 L10 30 L16 60 L8 60 L20 90 L14 90 L10 100"]; let html=''; for(let i=0; i < count; i++){const p=paths[Math.floor(Math.random()*paths.length)];html+=`<div class="lightning-container" style="--delay: -${Math.random()}s; --duration: ${Math.random() * 0.5 + 0.8}s;"><svg class="lightning-svg" viewBox="0 0 30 100"><path d="${p}" stroke="currentColor" stroke-width="2" fill="none"/></svg></div>`;} return html; };
     const createEnergyRain = (container) => { if (!container) return; container.innerHTML = ''; const count = 40; const colors = ['#ffd700', '#00ffff']; for (let i = 0; i < count; i++) { const p = document.createElement('div'); p.className = 'particle'; p.style.cssText = `height:${Math.random()*30+15}px;left:${Math.random()*100}%;animation-duration:${Math.random()*1.5+1}s;animation-delay:${Math.random()*3}s;color:${colors[Math.floor(Math.random()*colors.length)]};`; container.appendChild(p); } };
     const createHolographicRings = (container) => { if (!container) return; container.innerHTML = ''; for (let i = 0; i < 3; i++) { const r = document.createElement('div'); r.className = 'ring'; r.style.cssText = `width:${(i+1)*90}px;height:${(i+1)*90}px;animation-delay:${i*0.9}s;`; container.appendChild(r); } };
-    
-    // Cập nhật hàm fetchUserInfo để đồng bộ biến displayedTokens
-    const fetchUserInfo = async () => { 
-        try { 
-            const res = await fetch(`/api/user-info?username=${username}`); 
-            const data = await res.json(); 
-            if (data.success) { 
-                const coinsByBrand = data.userInfo.coins_by_brand || {}; 
-                const currentCoins = coinsByBrand[selectedBrand] || 0; 
-                displayedTokens = currentCoins; // *** CẬP NHẬT
-                coinDisplay.textContent = displayedTokens; // *** CẬP NHẬT
-            } 
-        } catch (e) { console.error("Lỗi fetch user info", e); } 
+
+    // === CÁC HÀM XỬ LÝ LOGIC ===
+    const updateDisplayedTokens = (amount) => {
+        displayedTokens = amount;
+        coinDisplay.textContent = displayedTokens;
+        sessionStorage.setItem(VISUAL_TOKEN_KEY, displayedTokens);
+    };
+
+    const fetchUserInfoFromServer = async () => {
+        try {
+            const res = await fetch(`/api/user-info?username=${username}`);
+            const data = await res.json();
+            if (data.success) {
+                const coinsByBrand = data.userInfo.coins_by_brand || {};
+                const currentCoins = coinsByBrand[selectedBrand] || 0;
+                updateDisplayedTokens(currentCoins);
+            }
+        } catch (e) { console.error("Lỗi fetch user info", e); }
+    };
+
+    const initializeTokenDisplay = async () => {
+        const savedAnalysisJSON = sessionStorage.getItem(ACTIVE_ANALYSIS_KEY);
+        const visualTokenCount = sessionStorage.getItem(VISUAL_TOKEN_KEY);
+
+        if (savedAnalysisJSON && visualTokenCount !== null) {
+            const savedAnalysis = JSON.parse(savedAnalysisJSON);
+            if (savedAnalysis.gameName === gameName) {
+                updateDisplayedTokens(parseInt(visualTokenCount, 10));
+                return;
+            }
+        }
+        await fetchUserInfoFromServer();
+    };
+
+    const cleanupSession = () => {
+        sessionStorage.removeItem(ACTIVE_ANALYSIS_KEY);
+        sessionStorage.removeItem(VISUAL_TOKEN_KEY);
     };
 
     const handleInsufficientTokens = (message) => {
         stopAllTimers();
-        sessionStorage.removeItem(ACTIVE_ANALYSIS_KEY);
+        cleanupSession();
         alert(message);
-        
-        // Cố gắng quay về trang game gần nhất
         const lastLobbyData = sessionStorage.getItem('lastLobby');
         if (lastLobbyData) {
             const { id, name } = JSON.parse(lastLobbyData);
@@ -75,14 +98,14 @@ window.onload = () => {
             window.location.href = '/dashboard.html';
         }
     };
-    
+
     const stopAllTimers = () => {
         if (analysisTimerId) clearInterval(analysisTimerId);
         if (countdownIntervalId) clearInterval(countdownIntervalId);
-        if (visualDeductionIntervalId) clearInterval(visualDeductionIntervalId); // *** MỚI
+        if (visualDeductionIntervalId) clearInterval(visualDeductionIntervalId);
         analysisTimerId = null;
         countdownIntervalId = null;
-        visualDeductionIntervalId = null; // *** MỚI
+        visualDeductionIntervalId = null;
     };
 
     const handleRecurringDeduction = async () => {
@@ -95,9 +118,7 @@ window.onload = () => {
             const result = await response.json();
 
             if (result.success) {
-                // Đồng bộ lại số token hiển thị với số token thật từ server
-                displayedTokens = result.newCoinBalance; 
-                coinDisplay.textContent = displayedTokens;
+                updateDisplayedTokens(result.newCoinBalance);
                 progressStatusText.textContent = `Đã trừ 10 Token để duy trì phân tích...`;
             } else if (result.outOfTokens) {
                 handleInsufficientTokens(result.message);
@@ -113,9 +134,7 @@ window.onload = () => {
         panelGameImage.src = imageUrl;
         mainVisual.innerHTML = `<div id="holographic-rings"></div><img id="robot-image" src="/assets/images/robot-bg.png" alt="Analyzing...">`;
         const frameLightning = document.getElementById('frame-wide-lightning');
-        if (frameLightning) {
-            frameLightning.innerHTML = `<div class="lightning-field left">${createLightningField()}</div><div class="lightning-field right">${createLightningField()}</div>`;
-        }
+        if (frameLightning) { frameLightning.innerHTML = `<div class="lightning-field left">${createLightningField()}</div><div class="lightning-field right">${createLightningField()}</div>`; }
         createEnergyRain(document.getElementById('particle-field'));
         createHolographicRings(document.getElementById('holographic-rings'));
         createParticleBurstEffect();
@@ -126,7 +145,6 @@ window.onload = () => {
             const title = box.querySelector('span').textContent;
             box.innerHTML = `<span>${title}</span><small>Chưa có dữ liệu</small>`;
         });
-        fetchUserInfo();
     }
 
     function displayResults(results) {
@@ -142,7 +160,7 @@ window.onload = () => {
         analysisProgressContainer.style.display = 'none';
         analyzeButton.style.display = 'block';
     }
-    
+
     function startResultCountdown(durationInSeconds) {
         stopAllTimers();
         let timeLeft = durationInSeconds;
@@ -161,45 +179,42 @@ window.onload = () => {
             updateTimer();
             if (timeLeft <= 0) {
                 stopAllTimers();
+                cleanupSession();
                 analyzeButton.disabled = false;
                 analyzeButton.textContent = "Phân Tích Lại";
                 isAnalyzing = false;
-                sessionStorage.removeItem(ACTIVE_ANALYSIS_KEY);
             }
         }, 1000);
 
-        // *** NÂNG CẤP: Bắt đầu timer trừ token trên giao diện ***
         visualDeductionIntervalId = setInterval(() => {
             if (displayedTokens > 0) {
-                displayedTokens--;
-                coinDisplay.textContent = displayedTokens;
+                updateDisplayedTokens(displayedTokens - 1);
             }
-        }, 6000); // 6000ms = 6 giây
+        }, 6000);
 
-        // Bắt đầu timer gọi backend sau mỗi phút
         analysisTimerId = setInterval(handleRecurringDeduction, 60000);
     }
-    
+
     const resumeAnalysis = (savedState) => {
         const remainingTime = Math.floor((savedState.expiresAt - Date.now()) / 1000);
         if (remainingTime > 0) {
-            fetchUserInfo(); 
             displayResults(savedState.results);
             startResultCountdown(remainingTime);
             progressStatusText.textContent = `Đã khôi phục phiên phân tích. Đang duy trì...`;
         } else {
-            sessionStorage.removeItem(ACTIVE_ANALYSIS_KEY);
+            cleanupSession();
             initializeUI();
         }
     };
-    
+
     analyzeButton.addEventListener('click', async () => {
         if (isAnalyzing) return;
         isAnalyzing = true;
         stopAllTimers();
-        sessionStorage.removeItem(ACTIVE_ANALYSIS_KEY);
+        cleanupSession();
         document.body.classList.remove('analyzing');
         initializeUI();
+        
         analyzeButton.style.display = 'none';
         analysisProgressContainer.style.display = 'block';
         progressStatusText.textContent = `Đang phân tích Sảnh "${lobbyName}" game "${gameName}"...`;
@@ -222,9 +237,7 @@ window.onload = () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    displayedTokens = result.newCoinBalance; // Cập nhật số token hiển thị
-                    coinDisplay.textContent = displayedTokens;
-                    
+                    updateDisplayedTokens(result.newCoinBalance);
                     const now = new Date(), future = new Date(now.getTime() + 30 * 60 * 1000);
                     const formatTime = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
                     const analysisResults = {
@@ -252,18 +265,21 @@ window.onload = () => {
             }
         }, 5000);
     });
-    
+
     // === LOGIC CHÍNH KHI TẢI TRANG ===
-    const savedAnalysisJSON = sessionStorage.getItem(ACTIVE_ANALYSIS_KEY);
-    if (savedAnalysisJSON) {
-        const savedAnalysis = JSON.parse(savedAnalysisJSON);
-        if (savedAnalysis.gameName === gameName) {
-            resumeAnalysis(savedAnalysis);
+    (async () => {
+        await initializeTokenDisplay();
+        const savedAnalysisJSON = sessionStorage.getItem(ACTIVE_ANALYSIS_KEY);
+        if (savedAnalysisJSON) {
+            const savedAnalysis = JSON.parse(savedAnalysisJSON);
+            if (savedAnalysis.gameName === gameName) {
+                resumeAnalysis(savedAnalysis);
+            } else {
+                initializeUI();
+            }
         } else {
             initializeUI();
         }
-    } else {
-        initializeUI();
-    }
-    window.addEventListener('beforeunload', stopAllTimers);
+        window.addEventListener('beforeunload', stopAllTimers);
+    })();
 };
