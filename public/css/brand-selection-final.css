@@ -88,7 +88,7 @@ body {
 .brand-logo { max-width: 100%; max-height: 100%; object-fit: contain; }
 .brand-name { font-size: 1.5em; font-weight: 700; font-family: 'Poppins', sans-serif; color: var(--primary-red); text-shadow: 0 0 15px var(--primary-red); }
 
-/* === BẮT ĐẦU: STYLE MỚI CHO TỶ LỆ % === */
+/* === STYLE CHO TỶ LỆ % === */
 .brand-percentage {
     background: linear-gradient(45deg, #00b894, #00ff8c);
     color: #111;
@@ -100,157 +100,44 @@ body {
     box-shadow: 0 0 15px rgba(0, 255, 140, 0.8);
     text-shadow: 0 1px 2px rgba(0,0,0,0.2);
     border: 2px solid #fff;
+    transition: background 0.3s ease;
 }
-/* === KẾT THÚC: STYLE MỚI === */
+
+/* === THÊM MỚI: Style cho tỷ lệ % thấp (màu đỏ) === */
+.brand-percentage.low {
+    background: linear-gradient(45deg, var(--secondary-red), var(--primary-red));
+    box-shadow: 0 0 15px rgba(217, 4, 41, 0.8);
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
 
 /* ======================================= */
 /* === VỊ TRÍ 3D (DESKTOP) - PHIÊN BẢN 5 THẺ === */
 /* ======================================= */
-/* Thẻ chính giữa, to nhất */
-.brand-card.active { 
-    transform: translateX(0) translateZ(0) scale(1); 
-    opacity: 1; 
-    z-index: 100; 
-}
-/* Hai thẻ ngay cạnh thẻ chính */
-.brand-card.prev { 
-    transform: translateX(-65%) translateZ(-180px) scale(0.85); 
-    opacity: 0.7; 
-    z-index: 95; 
-}
-.brand-card.next { 
-    transform: translateX(65%) translateZ(-180px) scale(0.85); 
-    opacity: 0.7; 
-    z-index: 95; 
-}
-/* Hai thẻ ngoài cùng, nhỏ nhất */
-.brand-card.prev2 { 
-    transform: translateX(-130%) translateZ(-320px) scale(0.7); 
-    opacity: 0.4; 
-    z-index: 90; 
-}
-.brand-card.next2 { 
-    transform: translateX(130%) translateZ(-320px) scale(0.7); 
-    opacity: 0.4; 
-    z-index: 90; 
-}
-
-.brand-card:not(.active):not(.prev):not(.next):not(.prev2):not(.next2) { 
-    transform: scale(0.5); 
-    opacity: 0; 
-    pointer-events: none; 
-}
-
+.brand-card.active { transform: translateX(0) translateZ(0) scale(1); opacity: 1; z-index: 100; }
+.brand-card.prev { transform: translateX(-65%) translateZ(-180px) scale(0.85); opacity: 0.7; z-index: 95; }
+.brand-card.next { transform: translateX(65%) translateZ(-180px) scale(0.85); opacity: 0.7; z-index: 95; }
+.brand-card.prev2 { transform: translateX(-130%) translateZ(-320px) scale(0.7); opacity: 0.4; z-index: 90; }
+.brand-card.next2 { transform: translateX(130%) translateZ(-320px) scale(0.7); opacity: 0.4; z-index: 90; }
+.brand-card:not(.active):not(.prev):not(.next):not(.prev2):not(.next2) { transform: scale(0.5); opacity: 0; pointer-events: none; }
 
 /* ======================================= */
 /* === NÚT ĐIỀU KHIỂN (DESKTOP) === */
 /* ======================================= */
 .carousel-controls { display: flex; justify-content: space-between; width: 100%; max-width: 800px; margin-top: 20px; }
-
-.control-btn { 
-    background: linear-gradient(45deg, var(--secondary-red), var(--primary-red)); 
-    border: 1px solid rgba(255, 255, 255, 0.2); 
-    color: #fff; 
-    font-size: 1.1em; 
-    font-family: 'Poppins', sans-serif; 
-    font-weight: 700; 
-    cursor: pointer; 
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5); 
-    transition: all 0.2s ease-in-out; 
-    padding: 12px 30px; 
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
-    border-radius: 50px; 
-    box-shadow: 0 4px 15px rgba(217, 4, 41, 0.4); 
-}
-.control-btn:hover { 
-    transform: translateY(-3px) scale(1.05); 
-    box-shadow: 0 6px 20px rgba(217, 4, 41, 0.7); 
-}
-
+.control-btn { background: linear-gradient(45deg, var(--secondary-red), var(--primary-red)); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; font-size: 1.1em; font-family: 'Poppins', sans-serif; font-weight: 700; cursor: pointer; text-shadow: 0 1px 3px rgba(0,0,0,0.5); transition: all 0.2s ease-in-out; padding: 12px 30px; display: flex; align-items: center; gap: 10px; border-radius: 50px; box-shadow: 0 4px 15px rgba(217, 4, 41, 0.4); }
+.control-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 20px rgba(217, 4, 41, 0.7); }
 .control-btn .arrow { font-size: 1.5em; }
 
 @media (max-width: 768px) {
-    .carousel-main-content {
-        /* Ghi đè lại để nó thành main-content bình thường */
-        flex-grow: 1;
-        display: block;
-        width: auto;
-        padding: 20px 10px;
-    }
-    
-    .carousel-container {
-        display: block;
-        height: auto;
-        perspective: none; /* Tắt 3D */
-    }
-
-    .brand-slider {
-        /* Chuyển thành layout lưới */
-        transform-style: flat;
-        position: static;
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px; /* === SỬA ĐỔI: Tăng khoảng cách giữa các thẻ === */
-        width: 100%;
-        height: auto;
-    }
-
-    .brand-card {
-        /* Reset thuộc tính desktop */
-        position: static;
-        opacity: 1 !important;
-        transform: none !important;
-        z-index: 1 !important;
-        
-        /* Chuyển thành card trong lưới */
-        height: auto;
-        /* Áp dụng lại style giống lobby-card */
-        background: rgba(255, 255, 255, 0.95);
-        border: 1px solid var(--border-color);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-    
-    .brand-card::before { display: none; } /* Tắt viền led quay trên mobile */
-    
-    .brand-card-inner {
-        position: static;
-        inset: auto;
-        background: transparent;
-        backdrop-filter: none;
-        gap: 10px;
-        padding: 0;
-    }
-
-    .logo-background {
-        width: 100%;
-        aspect-ratio: 16/10; /* Tỷ lệ giống lobby-card */
-        background-color: #fff;
-        border-radius: 0;
-        padding: 15px;
-        box-shadow: none;
-    }
-
-    .brand-name {
-        /* === SỬA ĐỔI: Làm thanh tiêu đề to và rõ hơn === */
-        width: 100%;
-        font-size: 0.9em; /* Phóng to chữ */
-        text-shadow: none;
-        color: white;
-        background: linear-gradient(90deg, var(--secondary-red), var(--primary-red));
-        padding: 15px 0; /* Tăng chiều cao thanh tiêu đề */
-        text-align: center;
-        text-transform: uppercase;
-    }
-
-    /* === Ẩn tỷ lệ % trên mobile để giao diện gọn gàng hơn === */
-    .brand-percentage {
-        display: none;
-    }
-
-    /* Ẩn nút điều khiển Back/Next trên mobile */
-    .carousel-controls {
-        display: none;
-    }
+    .carousel-main-content { flex-grow: 1; display: block; width: auto; padding: 20px 10px; }
+    .carousel-container { display: block; height: auto; perspective: none; }
+    .brand-slider { transform-style: flat; position: static; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; height: auto; }
+    .brand-card { position: static; opacity: 1 !important; transform: none !important; z-index: 1 !important; height: auto; background: rgba(255, 255, 255, 0.95); border: 1px solid var(--border-color); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    .brand-card::before { display: none; }
+    .brand-card-inner { position: static; inset: auto; background: transparent; backdrop-filter: none; gap: 10px; padding: 0; }
+    .logo-background { width: 100%; aspect-ratio: 16/10; background-color: #fff; border-radius: 0; padding: 15px; box-shadow: none; }
+    .brand-name { width: 100%; font-size: 0.9em; text-shadow: none; color: white; background: linear-gradient(90deg, var(--secondary-red), var(--primary-red)); padding: 15px 0; text-align: center; text-transform: uppercase; }
+    .brand-percentage { display: none; }
+    .carousel-controls { display: none; }
 }

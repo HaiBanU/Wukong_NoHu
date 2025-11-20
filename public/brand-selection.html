@@ -140,26 +140,27 @@
                 }
                 
                 const sortedGameBrands = brandsData.brands;
-                
-                // === THAY ĐỔI QUAN TRỌNG: Lấy `priorityBrand` từ API ===
-                // Nó sẽ là tên sảnh (VD: 'MM88') hoặc là `null`
                 const priorityBrand = brandsData.priorityBrand;
                 
                 const slider = document.getElementById('brand-slider');
                 const prevBtn = document.getElementById('prev-btn');
                 const nextBtn = document.getElementById('next-btn');
                 
-                slider.innerHTML = sortedGameBrands.map(brand => `
+                // === THAY ĐỔI: Thêm class `low` có điều kiện ===
+                slider.innerHTML = sortedGameBrands.map(brand => {
+                    // Xác định class màu sắc dựa trên tỷ lệ %
+                    const percentageClass = brand.percentage < 70 ? 'low' : '';
+                    return `
                     <div class="brand-card" data-brand-name="${brand.name}">
                         <div class="brand-card-inner">
                              <div class="logo-background">
                                 <img class="brand-logo" src="/assets/logos/${brand.logo}" alt="${brand.name}">
                             </div>
                             <div class="brand-name">${brand.name}</div>
-                            <div class="brand-percentage">${brand.percentage}%</div>
+                            <div class="brand-percentage ${percentageClass}">${brand.percentage}%</div>
                         </div>
-                    </div>`
-                ).join('');
+                    </div>`;
+                }).join('');
 
                 const cards = document.querySelectorAll('.brand-card');
                 let activeIndex = 0;
@@ -183,14 +184,12 @@
                 nextBtn.addEventListener('click', () => { activeIndex = (activeIndex + 1) % cards.length; updateCarousel(); });
                 prevBtn.addEventListener('click', () => { activeIndex = (activeIndex - 1 + cards.length) % cards.length; updateCarousel(); });
                 
-                // === THAY ĐỔI QUAN TRỌNG: Logic click được cập nhật ===
                 slider.addEventListener('click', (e) => {
                     const clickedCard = e.target.closest('.brand-card');
                     if (!clickedCard) return;
 
                     const brandName = clickedCard.dataset.brandName;
 
-                    // Xử lý xoay carousel trước
                     if (!clickedCard.classList.contains('active')) {
                         if (clickedCard.classList.contains('next') || clickedCard.classList.contains('next2')) { 
                             activeIndex = (activeIndex + 1) % cards.length; 
@@ -198,24 +197,18 @@
                             activeIndex = (activeIndex - 1 + cards.length) % cards.length; 
                         }
                         updateCarousel();
-                        return; // Dừng lại sau khi xoay
+                        return;
                     }
 
-                    // Nếu thẻ đã ở chính giữa (active), thì kiểm tra quyền truy cập
-                    // Case 1: Người dùng có admin quản lý (priorityBrand có giá trị)
                     if (priorityBrand) {
                         if (brandName === priorityBrand) {
-                            // Nhấn đúng sảnh ưu tiên -> Cho vào
                             sessionStorage.setItem('selectedBrand', brandName);
                             window.location.href = `/dashboard.html`;
                         } else {
-                            // Nhấn sai sảnh -> Hiển thị cảnh báo
                             showAlertModal(`Sảnh ${brandName} có tỷ lệ khá thấp. Vui lòng chọn sảnh ${priorityBrand} để có trải nghiệm tốt nhất!`);
                         }
                     } 
-                    // Case 2: Người dùng tự do, chưa có admin (priorityBrand là null)
                     else {
-                        // Cho phép vào bất kỳ sảnh nào
                         sessionStorage.setItem('selectedBrand', brandName);
                         window.location.href = `/dashboard.html`;
                     }

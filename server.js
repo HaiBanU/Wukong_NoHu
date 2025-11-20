@@ -77,7 +77,7 @@ app.post('/api/register', async (req, res) => { try { const { username, password
 app.post('/api/login', async (req, res) => { try { const { username, password } = req.body; const user = await User.findOne({ username }); if (!user) return res.status(404).json({ success: false, message: 'Tên đăng nhập không tồn tại' }); const isMatch = await bcrypt.compare(password, user.password); if (isMatch) { res.json({ success: true, message: 'Đăng nhập thành công!', isAdmin: user.is_admin, isSuperAdmin: user.is_super_admin, userId: user.is_admin ? user._id : null }); } else { res.status(401).json({ success: false, message: 'Mật khẩu không chính xác' }); } } catch (error) { res.status(500).json({ success: false, message: 'Lỗi server' }); } });
 app.get('/api/brands', (req, res) => { res.json({ success: true, brands: gameBrands }); });
 
-// === BẮT ĐẦU: API ĐƯỢC CẬP NHẬT ===
+// === BẮT ĐẦU: API ĐƯỢC CẬP NHẬT LOGIC % ===
 app.get('/api/brands-with-rates', async (req, res) => {
     try {
         const { username } = req.query;
@@ -90,43 +90,50 @@ app.get('/api/brands-with-rates', async (req, res) => {
             return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
         }
 
-        // Tìm sảnh ưu tiên (chỉ lấy cái đầu tiên nếu có nhiều)
         const priorityBrand = user.managed_by_admin_ids
             .map(admin => admin.assigned_brand)
-            .find(brand => brand); // Lấy brand đầu tiên khác null/undefined
+            .find(brand => brand);
 
-        // Tạo danh sách sảnh với tỷ lệ % ngẫu nhiên
-        let brandsWithRates = gameBrands.map(brand => ({
-            ...brand,
-            // Tỷ lệ ngẫu nhiên cho các sảnh thường: 70% - 89%
-            percentage: Math.floor(Math.random() * 20) + 70, 
-        }));
+        let brandsWithRates;
 
-        // Nếu có sảnh ưu tiên, xử lý đặc biệt
         if (priorityBrand) {
-            let priorityBrandIndex = -1;
-            
-            // Tìm sảnh ưu tiên trong danh sách và gán tỷ lệ cao
-            brandsWithRates.forEach((brand, index) => {
+            // Logic cho người dùng đã có Admin quản lý
+            brandsWithRates = gameBrands.map(brand => {
                 if (brand.name === priorityBrand) {
-                    // Tỷ lệ cao cho sảnh ưu tiên: 92% - 98%
-                    brand.percentage = Math.floor(Math.random() * 7) + 92;
-                    priorityBrandIndex = index;
+                    return {
+                        ...brand,
+                        // Tỷ lệ cao cho sảnh ưu tiên: 91% - 98%
+                        percentage: Math.floor(Math.random() * 8) + 91,
+                    };
+                } else {
+                    return {
+                        ...brand,
+                        // Tỷ lệ thấp cho sảnh khác: 50% - 69%
+                        percentage: Math.floor(Math.random() * 20) + 50,
+                    };
                 }
             });
+            
+            // Sắp xếp lại để đưa sảnh ưu tiên lên đầu
+            brandsWithRates.sort((a, b) => {
+                if (a.name === priorityBrand) return -1;
+                if (b.name === priorityBrand) return 1;
+                return 0;
+            });
 
-            // Đưa sảnh ưu tiên lên đầu danh sách
-            if (priorityBrandIndex > -1) {
-                const [priorityItem] = brandsWithRates.splice(priorityBrandIndex, 1);
-                brandsWithRates.unshift(priorityItem);
-            }
+        } else {
+            // Logic cho người dùng mới, chưa có Admin
+            brandsWithRates = gameBrands.map(brand => ({
+                ...brand,
+                // Tỷ lệ bình thường: 70% - 89%
+                percentage: Math.floor(Math.random() * 20) + 70,
+            }));
         }
 
-        // === THAY ĐỔI QUAN TRỌNG: Gửi cả `priorityBrand` về cho client ===
         res.json({
             success: true,
             brands: brandsWithRates,
-            priorityBrand: priorityBrand || null // Gửi tên sảnh, hoặc null nếu không có
+            priorityBrand: priorityBrand || null
         });
 
     } catch (error) {
@@ -134,7 +141,7 @@ app.get('/api/brands-with-rates', async (req, res) => {
         res.status(500).json({ success: false, message: "Lỗi server." });
     }
 });
-// === KẾT THÚC: API ĐƯỢC CẬP NHẬT ===
+// === KẾT THÚC: API ĐƯỢC CẬP NHẬT LOGIC % ===
 
 
 app.get('/api/user-info', async (req, res) => { try { const { username } = req.query; const userInfo = await User.findOne({ username }).select('username coins coins_by_brand assigned_brand'); if (!userInfo) return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" }); res.json({ success: true, userInfo }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server." }); } });
