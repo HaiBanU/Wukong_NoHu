@@ -79,7 +79,7 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 20px; /* Giảm gap để có không gian cho percentage */
+    gap: 20px;
     padding: 20px;
     box-sizing: border-box;
 }
@@ -103,7 +103,6 @@ body {
     transition: background 0.3s ease;
 }
 
-/* === THÊM MỚI: Style cho tỷ lệ % thấp (màu đỏ) === */
 .brand-percentage.low {
     background: linear-gradient(45deg, var(--secondary-red), var(--primary-red));
     box-shadow: 0 0 15px rgba(217, 4, 41, 0.8);
@@ -129,15 +128,59 @@ body {
 .control-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 20px rgba(217, 4, 41, 0.7); }
 .control-btn .arrow { font-size: 1.5em; }
 
+/* ==================================================================== */
+/* === BẮT ĐẦU: PHẦN CẬP NHẬT CHO GIAO DIỆN ĐIỆN THOẠI === */
+/* ==================================================================== */
 @media (max-width: 768px) {
     .carousel-main-content { flex-grow: 1; display: block; width: auto; padding: 20px 10px; }
     .carousel-container { display: block; height: auto; perspective: none; }
     .brand-slider { transform-style: flat; position: static; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; height: auto; }
-    .brand-card { position: static; opacity: 1 !important; transform: none !important; z-index: 1 !important; height: auto; background: rgba(255, 255, 255, 0.95); border: 1px solid var(--border-color); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-    .brand-card::before { display: none; }
-    .brand-card-inner { position: static; inset: auto; background: transparent; backdrop-filter: none; gap: 10px; padding: 0; }
-    .logo-background { width: 100%; aspect-ratio: 16/10; background-color: #fff; border-radius: 0; padding: 15px; box-shadow: none; }
-    .brand-name { width: 100%; font-size: 0.9em; text-shadow: none; color: white; background: linear-gradient(90deg, var(--secondary-red), var(--primary-red)); padding: 15px 0; text-align: center; text-transform: uppercase; }
-    .brand-percentage { display: none; }
-    .carousel-controls { display: none; }
+    
+    .brand-card { 
+        position: relative; /* SỬA LỖI: Thêm dòng này để chứa hiệu ứng viền LED */
+        opacity: 1 !important; 
+        transform: none !important; 
+        z-index: 1 !important; 
+        height: auto; 
+        border-radius: 15px;
+    }
+    
+    .brand-card-inner {
+        position: static; /* Đổi về static để không bị ảnh hưởng bởi ::before */
+        inset: 3px;
+        background: rgba(15, 5, 5, 0.8);
+        backdrop-filter: blur(10px);
+        gap: 10px;
+        padding: 15px;
+        height: 100%;
+        box-sizing: border-box;
+        justify-content: center;
+    }
+
+    .logo-background {
+        width: 80px;
+        height: 80px;
+        padding: 8px;
+        border-radius: 12px;
+    }
+    
+    .brand-name {
+        width: auto;
+        font-size: 1em;
+        text-shadow: 0 0 10px var(--primary-red);
+        background: none;
+        padding: 0;
+        text-align: center;
+        text-transform: none;
+    }
+
+    .brand-percentage {
+        display: block;
+        font-size: 1.1em;
+        padding: 5px 15px;
+    }
+    
+    .carousel-controls { 
+        display: none; 
+    }
 }
