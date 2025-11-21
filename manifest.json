@@ -1,0 +1,22 @@
+{
+  "name": "Wukong Slot",
+  "short_name": "Wukong",
+  "description": "Công cụ phân tích game slot Wukong",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#d90429",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/images/favicon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/assets/images/favicon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
