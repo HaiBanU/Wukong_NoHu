@@ -5,8 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Wukong Slot</title> <!-- Đã sửa -->
-    <link rel="icon" type="image/png" href="/assets/images/favicon.png"> <!-- Đã thêm -->
+    <title>Wukong Slot</title>
+    <link rel="icon" type="image/png" href="/assets/images/favicon.png">
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/user.css">
     <link rel="manifest" href="/manifest.json">
@@ -27,45 +27,21 @@
             transition: all 0.2s ease-in-out;
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
-
-        .filter-btn.filter-all,
-        .filter-btn.filter-wait {
-            background: linear-gradient(45deg, #a40606, #d90429);
-        }
-
-        .filter-btn.filter-jackpot {
-            background: linear-gradient(45deg, #00b894, #00ff8c);
-        }
-
-        .filter-btn.filter-play {
-            background: linear-gradient(45deg, #ff8e00, #ffc62b);
-        }
-        
-        .filter-btn:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.15);
-        }
-
-        .filter-btn.active {
-            transform: translateY(-2px) scale(1.05);
-            filter: brightness(1.2);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-            border-color: #fff;
-        }
+        .filter-btn.filter-all, .filter-btn.filter-wait { background: linear-gradient(45deg, #a40606, #d90429); }
+        .filter-btn.filter-jackpot { background: linear-gradient(45deg, #00b894, #00ff8c); }
+        .filter-btn.filter-play { background: linear-gradient(45deg, #ff8e00, #ffc62b); }
+        .filter-btn:hover { transform: translateY(-2px); filter: brightness(1.15); }
+        .filter-btn.active { transform: translateY(-2px) scale(1.05); filter: brightness(1.2); box-shadow: 0 6px 20px rgba(0,0,0,0.5); border-color: #fff; }
     </style>
 </head>
 <script>
-    // === BẮT BUỘC KIỂM TRA ĐĂNG NHẬP ===
-    if (!localStorage.getItem('username')) {
-        window.location.href = '/'; // Chuyển về trang đăng nhập
-    }
+    if (!localStorage.getItem('username')) { window.location.href = '/'; }
 </script>
 <body class="games-page">
     <div id="page-background"></div>
     <div id="space-dust-overlay"></div>
     <div id="background-effects"></div>
     <div id="grid-overlay"></div>
-
     <div class="video-overlay"></div>
     <div class="shooting-stars">
         <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
@@ -89,12 +65,12 @@
         </div>
 
         <div class="search-container">
-            <input type="text" id="game-search-input" placeholder="Nhập tên game để tìm kiếm...">
+            <!-- === CẬP NHẬT: Thêm maxlength="20" === -->
+            <input type="text" id="game-search-input" placeholder="Nhập tên game để tìm kiếm..." maxlength="20">
+            <!-- ===================================== -->
         </div>
         
-        <div class="grid-container" id="game-container">
-            <!-- Game cards will be inserted here -->
-        </div>
+        <div class="grid-container" id="game-container"></div>
     </main>
     
     <div class="terminal-notification fadeIn" style="animation-delay: 0.5s;">
@@ -107,23 +83,11 @@
 
     <script>
         function updateClock() { const clockContainer = document.getElementById('live-clock-container'); if (!clockContainer) return; const now = new Date(); const timeString = now.toLocaleTimeString('vi-VN'); const dateString = now.toLocaleDateString('vi-VN'); clockContainer.innerHTML = `<span class="clock-time">${timeString}</span><span class="clock-date">${dateString}</span>`; }
-        
-        // === NÂNG CẤP V4: HOÀN TOÀN MỚI NỘI DUNG TERMINAL ===
         let terminalMessages = [];
         let lastMessageIndex = -1;
         let typingInterval;
-
         function generateGameMessages(games = []) {
-            const messageTemplates = [
-                "Giải mã dữ liệu trò chơi trong sảnh đã chọn...",
-                "Đang phân tích chu kỳ và độ biến động của từng game.",
-                "Hệ thống gợi ý Jackpot đã được kích hoạt.",
-                "Cross-referencing historical data to identify patterns...",
-                "Lọc các game có tín hiệu 'chuẩn bị nhả thưởng'...",
-                "Chọn một trò chơi để tiến hành phân tích sâu bằng 4 Token.",
-                "Hãy nhớ, kiên nhẫn cũng là một chiến lược."
-            ];
-
+            const messageTemplates = [ "Giải mã dữ liệu trò chơi trong sảnh đã chọn...", "Đang phân tích chu kỳ và độ biến động của từng game.", "Hệ thống gợi ý Jackpot đã được kích hoạt.", "Cross-referencing historical data to identify patterns...", "Lọc các game có tín hiệu 'chuẩn bị nhả thưởng'...", "Chọn một trò chơi để tiến hành phân tích sâu bằng 4 Token.", "Hãy nhớ, kiên nhẫn cũng là một chiến lược." ];
             if (games.length > 0) {
                 const jackpotGames = games.filter(game => game.winRate > 85);
                 if (jackpotGames.length > 0) {
@@ -139,20 +103,16 @@
             }
             return messageTemplates;
         }
-
         function typeMessage(element, message) { if (typingInterval) clearInterval(typingInterval); let i = 0; element.innerHTML = ''; typingInterval = setInterval(() => { if (i < message.length) { element.textContent += message.charAt(i); i++; } else { clearInterval(typingInterval); } }, 50); }
         function showNextTerminalMessage() { 
             const messageEl = document.getElementById('terminal-message'); 
             if (!messageEl || terminalMessages.length === 0) return;
             let randomIndex;
-            do {
-                randomIndex = Math.floor(Math.random() * terminalMessages.length);
-            } while (randomIndex === lastMessageIndex && terminalMessages.length > 1);
+            do { randomIndex = Math.floor(Math.random() * terminalMessages.length); } while (randomIndex === lastMessageIndex && terminalMessages.length > 1);
             lastMessageIndex = randomIndex;
             const messageToShow = terminalMessages[randomIndex]; 
             typeMessage(messageEl, messageToShow); 
         }
-        // === KẾT THÚC NÂNG CẤP ===
 
         let allGames = [];
         const gameContainer = document.getElementById('game-container');
@@ -194,8 +154,6 @@
             if (data.success) {
                 allGames = data.games; 
                 renderGames(allGames); 
-                
-                // Cập nhật và kích hoạt Terminal với dữ liệu mới
                 terminalMessages = generateGameMessages(allGames);
                 showNextTerminalMessage();
                 setInterval(showNextTerminalMessage, 10000);
@@ -210,16 +168,10 @@
 
             function applyFiltersAndSearch() {
                 let filteredGames = [...allGames];
-                if (currentFilter === 'jackpot') {
-                    filteredGames = filteredGames.filter(game => game.winRate > 85);
-                } else if (currentFilter === 'play') {
-                    filteredGames = filteredGames.filter(game => game.winRate > 60 && game.winRate <= 85);
-                } else if (currentFilter === 'wait') {
-                    filteredGames = filteredGames.filter(game => game.winRate <= 60);
-                }
-                if (currentSearchTerm) {
-                    filteredGames = filteredGames.filter(game => game.name.toLowerCase().includes(currentSearchTerm));
-                }
+                if (currentFilter === 'jackpot') { filteredGames = filteredGames.filter(game => game.winRate > 85); }
+                else if (currentFilter === 'play') { filteredGames = filteredGames.filter(game => game.winRate > 60 && game.winRate <= 85); }
+                else if (currentFilter === 'wait') { filteredGames = filteredGames.filter(game => game.winRate <= 60); }
+                if (currentSearchTerm) { filteredGames = filteredGames.filter(game => game.name.toLowerCase().includes(currentSearchTerm)); }
                 renderGames(filteredGames);
             }
 
@@ -237,20 +189,8 @@
                 applyFiltersAndSearch();
             });
         };
-
         function getColorScheme(rate) { if (rate > 85) return { className: 'tag-jackpot', tag: 'JACKPOT', gradientColor: 'linear-gradient(45deg, #00ff8c, #00b894)' }; else if (rate > 60) return { className: 'tag-play', tag: 'CHƠI', gradientColor: 'linear-gradient(45deg, #ffc62b, #ff8e00)' }; else return { className: 'tag-wait', tag: 'CHỜ', gradientColor: 'linear-gradient(45deg, #d90429, #ef233c)' }; }
-    </script>
-    
-    <script>
         const overlay = document.querySelector('.video-overlay');
-        if (overlay) {
-            window.addEventListener('mousemove', (e) => {
-                const { clientX, clientY } = e;
-                overlay.style.setProperty('--mouse-x', `${clientX}px`);
-                overlay.style.setProperty('--mouse-y', `${clientY}px`);
-            });
-        }
+        if (overlay) { window.addEventListener('mousemove', (e) => { const { clientX, clientY } = e; overlay.style.setProperty('--mouse-x', `${clientX}px`); overlay.style.setProperty('--mouse-y', `${clientY}px`); }); }
     </script>
     <script src="/js/global.js"></script>
-</body>
-</html>

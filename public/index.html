@@ -1,10 +1,12 @@
+
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wukong Slot</title> <!-- Đã sửa -->
-    <link rel="icon" type="image/png" href="/assets/images/favicon.png"> <!-- Đã thêm -->
+    <title>Wukong Slot</title>
+    <link rel="icon" type="image/png" href="/assets/images/favicon.png">
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/login.css">
     <link rel="manifest" href="/manifest.json">
@@ -18,7 +20,6 @@
     <div class="login-container fadeIn">
         <div class="login-promo-panel">
             <div class="promo-image-wrapper">
-                <!-- THAY THẾ BẰNG VIDEO -->
                 <video autoplay loop muted playsinline src="/assets/videos/promo.mp4">
                 </video>
             </div>
@@ -34,9 +35,13 @@
             <form id="register-form" style="display: none;">
                 <h2>Tạo Tài Khoản</h2>
                 <p class="slogan-text">TOOL HỖ TRỢ TẤT CẢ CÁC SẢNH</p>
-                <div class="form-group"><input type="text" id="register-username" placeholder="Tên đăng nhập" required></div>
-                <div class="form-group"><input type="password" id="register-password" placeholder="Mật khẩu" required></div>
-                <div class="form-group"><input type="password" id="register-password-confirm" placeholder="Nhập lại mật khẩu" required></div>
+                
+                <!-- === CẬP NHẬT: Thêm maxlength="20" và sửa placeholder === -->
+                <div class="form-group"><input type="text" id="register-username" placeholder="Tên đăng nhập (6-20 ký tự)" required maxlength="20"></div>
+                <div class="form-group"><input type="password" id="register-password" placeholder="Mật khẩu (6-20 ký tự)" required maxlength="20"></div>
+                <div class="form-group"><input type="password" id="register-password-confirm" placeholder="Nhập lại mật khẩu" required maxlength="20"></div>
+                <!-- ======================================================= -->
+                
                 <button type="submit" class="btn-primary">Đăng ký</button>
             </form>
             <button id="toggle-btn" class="btn-secondary" style="margin-top: 15px;">Chưa có tài khoản? Đăng ký</button>
@@ -44,24 +49,6 @@
         </div>
     </div>
     <script>
-        /* === SỬA LỖI: Đã đổi từ comment HTML thành comment JavaScript ===
-           Chức năng tự động đăng nhập đã bị tắt theo yêu cầu. 
-           Người dùng sẽ luôn thấy form đăng nhập.
-        
-        (function kiemTraDangNhap() {
-            const daDangNhap = localStorage.getItem('username');
-            const laAdmin = localStorage.getItem('adminId');
-            if (daDangNhap) {
-                if (laAdmin) {
-                    window.location.href = '/admin.html';
-                } else {
-                    window.location.href = '/brand-selection.html';
-                }
-            }
-        })();
-        */
-
-
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
         const toggleBtn = document.getElementById('toggle-btn');
@@ -87,12 +74,15 @@
 
             let errors = [];
 
-            if (username.length <= 4) {
-                errors.push('Tên đăng nhập phải có nhiều hơn 4 ký tự!');
+            // === CẬP NHẬT: Logic kiểm tra độ dài mới ===
+            if (username.length < 6 || username.length > 20) {
+                errors.push('Tên đăng nhập phải từ 6 đến 20 ký tự!');
             }
-            if (password.length <= 6) {
-                errors.push('Mật khẩu phải có nhiều hơn 6 ký tự!');
+            if (password.length < 6 || password.length > 20) {
+                errors.push('Mật khẩu phải từ 6 đến 20 ký tự!');
             }
+            // ==========================================
+            
             if (password !== confirmPassword) {
                 errors.push('Mật khẩu nhập lại không khớp!');
             }

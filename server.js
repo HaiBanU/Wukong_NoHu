@@ -1,4 +1,4 @@
-// --- START OF FILE server.js (ĐÃ CẬP NHẬT CHI PHÍ TOKEN LÊN 10) ---
+
 
 // === THÊM MỚI: Dòng này phải ở trên cùng để nạp biến môi trường ===
 require('dotenv').config();
@@ -65,7 +65,39 @@ async function createSuperAdmin() { const superAdmins = [ { username: 'longho', 
 async function migrateOrphanedSubAdmins() { try { const originalSuperAdmin = await User.findOne({ username: 'longho', is_super_admin: true }); if (!originalSuperAdmin) { console.log("Migration script: Original Super Admin ('longho') not found. Skipping migration."); return; } const result = await User.updateMany( { is_admin: true, is_super_admin: false, created_by_super_admin_id: null }, { $set: { created_by_super_admin_id: originalSuperAdmin._id } } ); if (result.modifiedCount > 0) { console.log(`Migration successful: Assigned ${result.modifiedCount} orphaned sub-admin(s) to '${originalSuperAdmin.username}'.`); } else { console.log("Migration script: No orphaned sub-admins found to update."); } } catch (error) { console.error("Error during sub-admin migration:", error.message); } }
 
 // --- PHẦN 3: CÁC API ENDPOINTS ---
-app.post('/api/register', async (req, res) => { try { const { username, password } = req.body; if (!username || !password) { return res.status(400).json({ success: false, message: 'Tên đăng nhập và mật khẩu không được để trống' }); } if (username.length <= 4) { return res.status(400).json({ success: false, message: 'Tên đăng nhập phải có nhiều hơn 4 ký tự' }); } if (password.length <= 6) { return res.status(400).json({ success: false, message: 'Mật khẩu phải có nhiều hơn 6 ký tự' }); } const existingUser = await User.findOne({ username }); if (existingUser) { return res.status(409).json({ success: false, message: 'Tên đăng nhập đã tồn tại' }); } const hashedPassword = await bcrypt.hash(password, 10); await new User({ username, password: hashedPassword }).save(); res.json({ success: true, message: 'Đăng ký thành công!' }); } catch (error) { res.status(500).json({ success: false, message: 'Lỗi server khi tạo tài khoản' }); } });
+
+// === CẬP NHẬT: Logic đăng ký giới hạn 6-20 ký tự ===
+app.post('/api/register', async (req, res) => { 
+    try { 
+        const { username, password } = req.body; 
+        
+        if (!username || !password) { 
+            return res.status(400).json({ success: false, message: 'Tên đăng nhập và mật khẩu không được để trống' }); 
+        } 
+        
+        // Kiểm tra độ dài Username (6-20)
+        if (username.length < 6 || username.length > 20) { 
+            return res.status(400).json({ success: false, message: 'Tên đăng nhập phải từ 6 đến 20 ký tự' }); 
+        } 
+        
+        // Kiểm tra độ dài Password (6-20)
+        if (password.length < 6 || password.length > 20) { 
+            return res.status(400).json({ success: false, message: 'Mật khẩu phải từ 6 đến 20 ký tự' }); 
+        } 
+        
+        const existingUser = await User.findOne({ username }); 
+        if (existingUser) { 
+            return res.status(409).json({ success: false, message: 'Tên đăng nhập đã tồn tại' }); 
+        } 
+        
+        const hashedPassword = await bcrypt.hash(password, 10); 
+        await new User({ username, password: hashedPassword }).save(); 
+        res.json({ success: true, message: 'Đăng ký thành công!' }); 
+    } catch (error) { 
+        res.status(500).json({ success: false, message: 'Lỗi server khi tạo tài khoản' }); 
+    } 
+});
+
 app.post('/api/login', async (req, res) => { try { const { username, password } = req.body; const user = await User.findOne({ username }); if (!user) return res.status(404).json({ success: false, message: 'Tên đăng nhập không tồn tại' }); const isMatch = await bcrypt.compare(password, user.password); if (isMatch) { res.json({ success: true, message: 'Đăng nhập thành công!', isAdmin: user.is_admin, isSuperAdmin: user.is_super_admin, userId: user.is_admin ? user._id : null }); } else { res.status(401).json({ success: false, message: 'Mật khẩu không chính xác' }); } } catch (error) { res.status(500).json({ success: false, message: 'Lỗi server' }); } });
 app.get('/api/brands', (req, res) => { res.json({ success: true, brands: gameBrands }); });
 app.get('/api/brands-with-rates', async (req, res) => { try { const { username } = req.query; if (!username) { return res.status(400).json({ success: false, message: "Thiếu tên người dùng." }); } const user = await User.findOne({ username }).populate('managed_by_admin_ids', 'assigned_brand'); if (!user) { return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." }); } const priorityBrand = user.managed_by_admin_ids.map(admin => admin.assigned_brand).find(brand => brand); let brandsWithRates; if (priorityBrand) { brandsWithRates = gameBrands.map(brand => (brand.name === priorityBrand ? { ...brand, percentage: Math.floor(Math.random() * 8) + 91 } : { ...brand, percentage: Math.floor(Math.random() * 20) + 50 })); brandsWithRates.sort((a, b) => { if (a.name === priorityBrand) return -1; if (b.name === priorityBrand) return 1; return 0; }); } else { brandsWithRates = gameBrands.map(brand => ({ ...brand, percentage: Math.floor(Math.random() * 20) + 70 })); } res.json({ success: true, brands: brandsWithRates, priorityBrand: priorityBrand || null }); } catch (error) { console.error("Lỗi khi lấy sảnh với tỷ lệ:", error); res.status(500).json({ success: false, message: "Lỗi server." }); } });
