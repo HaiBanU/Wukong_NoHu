@@ -6,11 +6,13 @@
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="manifest" href="/manifest.json">
+    <!-- === CẬP NHẬT: THÊM THƯ VIỆN XLSX ĐỂ XUẤT EXCEL === -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         .card { padding: 0; }
         .user-item { 
             display: grid; 
-            grid-template-columns: minmax(150px, 1fr) auto auto; 
+            grid-template-columns: minmax(200px, 1fr) auto auto; 
             gap: 20px; 
             align-items: center; 
             padding: 15px 20px; 
@@ -82,7 +84,11 @@
         <h2 id="main-title" style="margin-top:0;">Quản Lý Người Dùng</h2>
         <div class="page-header">
             <input type="text" id="user-search-input" class="search-bar" placeholder="Tìm kiếm user...">
-            <button class="btn-primary" style="width: auto; padding: 12px 20px;" onclick="openLinkUserModal()">+ Thêm Tài Khoản</button>
+            <div style="display: flex; gap: 10px;">
+                <!-- === CẬP NHẬT: THÊM NÚT XUẤT EXCEL === -->
+                <button class="btn-primary" style="width: auto; padding: 12px 20px; background: #28a745;" onclick="exportToExcel()">Xuất Excel</button>
+                <button class="btn-primary" style="width: auto; padding: 12px 20px;" onclick="openLinkUserModal()">+ Thêm Tài Khoản</button>
+            </div>
         </div>
         <div id="user-list-container" class="card"></div>
     </main>
@@ -178,7 +184,7 @@
                     return;
                 }
             } else {
-                adminAssignedBrand = "SuperAdmin"; // Super Admin có thể quản lý token ở mọi sảnh
+                adminAssignedBrand = "SuperAdmin";
                 document.getElementById('main-title').textContent = `Quản lý User (Super Admin)`;
             }
 
@@ -202,13 +208,19 @@
             }
             users.forEach(user => {
                 const userCoinsByBrand = user.coins_by_brand || {};
-                // Admin chỉ thấy và thao tác được với token của sảnh mình quản lý
                 const currentCoins = userCoinsByBrand[adminAssignedBrand] || 0;
+                
+                // === CẬP NHẬT: HIỂN THỊ TÊN VÀ SĐT ===
+                const userPhone = user.phone || 'Không có SĐT';
 
                 const item = document.createElement('div');
                 item.className = 'user-item';
                 item.innerHTML = `
-                    <span class="user-name">${user.username}</span>
+                    <div style="display: flex; flex-direction: column;">
+                        <span class="user-name">${user.username}</span>
+                        <span style="font-size: 0.85em; color: #666;">SĐT: ${userPhone}</span>
+                    </div>
+
                     <div class="user-token-info">
                         <span class="user-token-display" id="tokens-for-${user._id}">Token: ${currentCoins}</span>
                         <div class="token-update-form">
@@ -225,11 +237,52 @@
             });
         }
         
+        // === CẬP NHẬT: TÌM KIẾM CẢ THEO SĐT ===
         userSearchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
-            const filteredUsers = currentUsers.filter(user => user.username.toLowerCase().includes(searchTerm));
+            const filteredUsers = currentUsers.filter(user => 
+                user.username.toLowerCase().includes(searchTerm) || 
+                (user.phone && user.phone.includes(searchTerm))
+            );
             renderUsers(filteredUsers);
         });
+
+        // === CẬP NHẬT: HÀM XUẤT EXCEL ===
+        function exportToExcel() {
+            if (currentUsers.length === 0) {
+                showToast("Không có dữ liệu user để xuất!", false);
+                return;
+            }
+
+            // Chuẩn bị dữ liệu cho Excel
+            const dataForExcel = currentUsers.map((user, index) => ({
+                STT: index + 1,
+                "Tên Tài Khoản": user.username,
+                "Số Điện Thoại": user.phone || "Chưa cập nhật",
+                "Token Hiện Tại": (user.coins_by_brand && user.coins_by_brand[adminAssignedBrand]) || 0
+            }));
+
+            // Tạo Workbook và Worksheet từ thư viện SheetJS
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(dataForExcel);
+
+            // Chỉnh độ rộng cột
+            const wscols = [
+                {wch: 5},  // STT
+                {wch: 20}, // Tên
+                {wch: 15}, // Phone
+                {wch: 15}  // Token
+            ];
+            ws['!cols'] = wscols;
+
+            XLSX.utils.book_append_sheet(wb, ws, "DanhSachUser");
+
+            // Tải file về
+            const fileName = `DanhSachUser_${adminAssignedBrand}_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            showToast("Đã xuất file Excel thành công!", true);
+        }
 
         linkUserForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -248,7 +301,7 @@
                 if (result.success) {
                     showToast(result.message, true);
                     closeAllModals();
-                    initializePage(); // Tải lại danh sách để user mới hiện ra
+                    initializePage(); 
                 } else {
                     showModalMessage(result.message, false);
                 }
@@ -312,7 +365,6 @@
             }
         }
 
-        // === CẬP NHẬT: Hộp thoại xác nhận cho hành động "xóa liên kết" ===
         async function deleteUser(userId, username) {
             if (confirm(`Bạn có chắc chắn muốn xóa tài khoản "${username}" khỏi danh sách quản lý của mình không?`)) {
                 try {
