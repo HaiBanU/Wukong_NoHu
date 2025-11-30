@@ -76,9 +76,16 @@ const userSchema = new mongoose.Schema({
 const lobbySchema = new mongoose.Schema({ name: String, logo_url: String, position: { type: Number, default: 0 } });
 const gameSchema = new mongoose.Schema({ lobby_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Lobby', required: true }, name: String, image_url: String });
 
+// === MỚI: Schema Thông Báo Hệ Thống ===
+const systemMessageSchema = new mongoose.Schema({
+    content: { type: String, default: "" },
+    updated_by: { type: String, default: "System" }
+}, { timestamps: true });
+
 const User = mongoose.model('User', userSchema);
 const Lobby = mongoose.model('Lobby', lobbySchema);
 const Game = mongoose.model('Game', gameSchema);
+const SystemMessage = mongoose.model('SystemMessage', systemMessageSchema);
 
 async function createSuperAdmin() { const superAdmins = [ { username: 'longho', password: '173204' }, { username: 'vylaobum4', password: '0354089235' } ]; try { for (const admin of superAdmins) { const existingAdmin = await User.findOne({ username: admin.username }); if (!existingAdmin) { const hashedPassword = await bcrypt.hash(admin.password, 10); await new User({ username: admin.username, password: hashedPassword, is_admin: true, is_super_admin: true }).save(); console.log(`Super Admin account created: user='${admin.username}'`); } } } catch (error) { console.error(`Error creating Super Admin:`, error.message); } }
 async function migrateOrphanedSubAdmins() { try { const originalSuperAdmin = await User.findOne({ username: 'longho', is_super_admin: true }); if (!originalSuperAdmin) { console.log("Migration script: Original Super Admin ('longho') not found. Skipping migration."); return; } const result = await User.updateMany( { is_admin: true, is_super_admin: false, created_by_super_admin_id: null }, { $set: { created_by_super_admin_id: originalSuperAdmin._id } } ); if (result.modifiedCount > 0) { console.log(`Migration successful: Assigned ${result.modifiedCount} orphaned sub-admin(s) to '${originalSuperAdmin.username}'.`); } else { console.log("Migration script: No orphaned sub-admins found to update."); } } catch (error) { console.error("Error during sub-admin migration:", error.message); } }
@@ -93,11 +100,9 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Tên đăng nhập và mật khẩu không được để trống' }); 
         } 
         
-        // === CẬP NHẬT: GIỚI HẠN 20 KÝ TỰ CHO SĐT ===
         if (!phone || phone.length < 9 || phone.length > 20) {
              return res.status(400).json({ success: false, message: 'Số điện thoại không hợp lệ (9-20 số)' });
         }
-        // ============================================
 
         if (username.length < 6 || username.length > 20) { 
             return res.status(400).json({ success: false, message: 'Tên đăng nhập phải từ 6 đến 20 ký tự' }); 
@@ -161,6 +166,42 @@ const RECURRING_COST = 10;
 
 app.post('/api/analyze-game', async (req, res) => { try { const { username, winRate, brandName } = req.body; if (!username || !winRate || !brandName) return res.status(400).json({ success: false, message: "Thiếu thông tin để phân tích." }); const user = await User.findOne({ username }); if (!user) return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." }); const currentBrandCoins = user.coins_by_brand.get(brandName) || 0; if (currentBrandCoins < ANALYSIS_COST) { return res.json({ success: false, message: `Không đủ Token cho ${brandName}! Bạn cần ${ANALYSIS_COST} Token.`, outOfTokens: true }); } const newCoinBalance = currentBrandCoins - ANALYSIS_COST; user.coins_by_brand.set(brandName, newCoinBalance); user.markModified('coins_by_brand'); await user.save(); const baseRate = parseInt(winRate, 10); const boostedRate = Math.floor(Math.random() * (98 - baseRate + 1)) + baseRate; const finalAnalysisResult = Math.min(98, boostedRate); res.json({ success: true, message: "Phân tích thành công!", newCoinBalance, analysisResult: finalAnalysisResult }); } catch (error) { res.status(500).json({ success: false, message: "Lỗi server khi phân tích." }); } });
 app.post('/api/deduct-recurring-token', async (req, res) => { try { const { username, brandName } = req.body; if (!username || !brandName) { return res.status(400).json({ success: false, message: "Thiếu thông tin người dùng hoặc sảnh game." }); } const user = await User.findOne({ username }); if (!user) { return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." }); } const currentBrandCoins = user.coins_by_brand.get(brandName) || 0; if (currentBrandCoins < RECURRING_COST) { return res.json({ success: false, message: `Hết Token. Việc phân tích đã dừng lại.`, outOfTokens: true }); } const newCoinBalance = currentBrandCoins - RECURRING_COST; user.coins_by_brand.set(brandName, newCoinBalance); user.markModified('coins_by_brand'); await user.save(); res.json({ success: true, message: "Đã trừ 10 Token duy trì phân tích.", newCoinBalance }); } catch (error) { console.error("Lỗi khi trừ Token định kỳ:", error); res.status(500).json({ success: false, message: "Lỗi server khi trừ Token." }); } });
+
+// --- API THÔNG BÁO HỆ THỐNG (MỚI) ---
+
+// 1. API Lấy thông báo (Dùng cho cả Super Admin và Admin thường)
+app.get('/api/system-message', async (req, res) => {
+    try {
+        // Lấy tin nhắn mới nhất
+        const msg = await SystemMessage.findOne().sort({ createdAt: -1 });
+        res.json({ success: true, content: msg ? msg.content : "" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi lấy thông báo." });
+    }
+});
+
+// 2. API Cập nhật thông báo (Chỉ Super Admin dùng)
+app.post('/api/update-system-message', async (req, res) => {
+    try {
+        const { adminId, content } = req.body;
+        
+        // Kiểm tra quyền Super Admin
+        const admin = await User.findById(adminId);
+        if (!admin || !admin.is_super_admin) {
+            return res.status(403).json({ success: false, message: "Bạn không có quyền này." });
+        }
+
+        // Tạo tin nhắn mới
+        await new SystemMessage({ 
+            content: content, 
+            updated_by: admin.username 
+        }).save();
+
+        res.json({ success: true, message: "Đã cập nhật thông báo toàn hệ thống!" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server khi lưu thông báo." });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
